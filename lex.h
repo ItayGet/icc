@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "token.h"
+
 // Generates a syntax error
 void syntaxError(const char *expected, const char *got, int line);
 
