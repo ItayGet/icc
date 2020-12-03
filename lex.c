@@ -45,12 +45,14 @@ Token getNextToken(Stream *s) {
 		if(c == '/') {
 			c = s->getNextChar();
 			switch(c) {
+			// Single-line comment
 			case '/':
 				success = true;
 				while((c = s->getNextChar()) != '\n') {
 					if(c == EOF) { syntaxError("end of line", "EOF", 0); }
 				}
 				break;
+			// Multi-line comment
 			case '*':
 				success = true;
 				while(true) {
@@ -83,17 +85,16 @@ Token getNextToken(Stream *s) {
 		// Index into name
 		int i = 0;
 		do {
-			// Handle realloc
+			// Handle exapnding the size of name
 			if(i == name_len - 1) {
 				name_len += MIN_IDEN_SIZE;
 				name = realloc(name, name_len);
 			}
 
-			name[i] = c;
-			i++;
+			name[i++] = c;
 
 			c = s->getNextChar();
-		} while(isalpha(c) || c == '_');
+		} while(isalnum(c) || c == '_');
 		s->pushLastChar(c);
 
 		name[i] = 0;
@@ -102,6 +103,55 @@ Token getNextToken(Stream *s) {
 		t.type = tokenIdentifier;
 		t.identifier.name = name;
 
+		return t;
+	}
+
+	// Integer constant
+	if(isdigit(c)) {
+		int value = 0;
+
+		// Octal and hex
+		if(c == '0') {
+			c = s->getNextChar();
+			if(c == 'x' || c == 'X') {
+				// Hex
+				for(; true; c = s->getNextChar()) {
+					if(islower(c)) {
+						value *= 16;
+						value += c - 'a';
+					}
+					else if(isupper(c)) {
+						value *= 16;
+						value += c - 'A';
+					}
+					else if(isdigit(c)) {
+						value *= 16;
+						value += c - '0';
+					}else {
+						break;
+					}
+				} 
+			} else {
+				// Octal
+				for(; c >= '0' && c <= '7'; c = s->getNextChar()) {
+					value *= 8;
+					value += c - '0';
+				}
+			}
+		} else {
+			// Decimal
+			for(; isdigit(c); c = s->getNextChar()) {
+				value *= 10;
+				value += c - '0';
+			}
+		}
+
+		// TODO: add UL suffixes
+
+		Token t;
+		t.type = tokenIntegerConstant;
+		t.integer.value = value;
+		
 		return t;
 	}
 }

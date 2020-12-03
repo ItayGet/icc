@@ -6,6 +6,7 @@ typedef enum {
 	tokenError,
 	tokenEOF,
 	tokenIdentifier,
+	tokenIntegerConstant,
 	tokenCharacter,
 } TokenType;
 
@@ -19,5 +20,9 @@ typedef struct {
 		struct {
 			int c;
 		} character;
+
+		struct {
+			int value;
+		} integer;
 	};
 } Token;
