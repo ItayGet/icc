@@ -16,4 +16,4 @@ typedef struct {
 } Stream;
 
 // Get next token in input stream
-Token getNextToken(Stream *s);
+void getNextToken(Token *t, Stream *s);
