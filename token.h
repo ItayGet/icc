@@ -7,6 +7,7 @@ typedef enum {
 	tokenEOF,
 	tokenIdentifier,
 	tokenIntegerConstant,
+	tokenStringLiteral,
 	tokenCharacter,
 } TokenType;
 
@@ -20,6 +21,10 @@ typedef struct {
 		struct {
 			int c;
 		} character;
+
+		struct {
+			char* contents;
+		} stringLiteral;
 
 		struct {
 			int value;

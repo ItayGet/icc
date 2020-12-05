@@ -5,7 +5,7 @@ LIBS = -lm
 
 DEPS = 
 
-OBJ = symbol.o lex.o
+OBJ = *.c
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

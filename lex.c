@@ -1,5 +1,7 @@
 #include "lex.h"
 #include "token.h"
+#include "stringbuilder.h"
+#include "literal.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -80,30 +82,23 @@ void skipWhitespace(Stream *s, int *c) {
 // If it is return true and change token
 // else, return false
 bool isTokenIdentifier(Token *t, Stream *s, int c) {
-	if(!isalpha(c)) { return false; } 
+	if(!isalpha(c)) { return false; }
 
-	size_t name_len = MIN_IDEN_SIZE;
-	char* name = malloc(MIN_IDEN_SIZE);
+	StringBuilder sb;
+	makeStringBuilder(&sb, CAP_INC_SB);
 
-	// Index into name
-	int i = 0;
 	do {
-		// Handle exapnding the size of name
-		if(i == name_len - 1) {
-			name_len += MIN_IDEN_SIZE;
-			name = realloc(name, name_len);
-		}
-
-		name[i++] = c;
+		appendStringBuilderChar(&sb, c);
 
 		c = s->getNextChar();
 	} while(isalnum(c) || c == '_');
+
 	s->pushLastChar(c);
 
-	name[i] = 0;
+	stringifyStringBuilderBuffer(&sb);
 	
 	t->type = tokenIdentifier;
-	t->identifier.name = name;
+	t->identifier.name = sb.buffer;
 
 	return true;
 }
@@ -121,14 +116,17 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 		c = s->getNextChar();
 		if(c == 'x' || c == 'X') {
 			// Hex
+			c = s->getNextChar();
+			//if(!isxdigit(c) { error }
+
 			for(; true; c = s->getNextChar()) {
-				if(islower(c)) {
+				if(c >= 'a' && c <= 'f') {
 					value *= 16;
-					value += c - 'a';
+					value += c - 'a' + 10;
 				}
-				else if(isupper(c)) {
+				else if(c >= 'A' && c >= 'F') {
 					value *= 16;
-					value += c - 'A';
+					value += c - 'A' + 10;
 				}
 				else if(isdigit(c)) {
 					value *= 16;
@@ -154,6 +152,8 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 
 	// TODO: add UL suffixes
 	// TODO: reform to add floats
+	
+	s->pushLastChar(c);
 
 	t->type = tokenIntegerConstant;
 	t->integer.value = value;
@@ -170,6 +170,8 @@ void getNextToken(Token *t, Stream *s) {
 		t->type = tokenEOF;
 		return;
 	}
+
+	if(isTokenStringLiteral(t, s, c)) { return; }
 	
 	if(isTokenIdentifier(t, s, c)) { return; }
 
