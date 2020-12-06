@@ -1,22 +1,30 @@
 CC = gcc
-CFLAGS = -I.
 
+INCDIR = ./include
+SRCDIR = ./src
+OBJDIR = ./obj
+
+CFLAGS = -I$(INCDIR)
 LIBS = -lm
 
-DEPS = 
+OBJ = lex.o stringbuilder.o literal.o
 
-OBJ = *.c
-
-%.o: %.c $(DEPS)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
-	
-icc: $(OBJ)
+
+all: $(OBJDIR) icc
+
+icc: $(OBJ:%=$(OBJDIR)/%)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+$(OBJDIR): 
+	mkdir $(OBJDIR)
+
+.PHONY: debug clean
 
 debug: CFLAGS += -g
 debug: icc
 
-.PHONY: clean
-
 clean:
-	rm -f *.o *~ core *~
+	rm -f *~
+	rm -rf $(OBJDIR)

@@ -1,4 +1,5 @@
 #include "lex.h"
+
 #include "token.h"
 #include "stringbuilder.h"
 #include "literal.h"
