@@ -162,6 +162,239 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 	return true;
 }
 
+// Check if current token is a punctuator
+// If it is return true and change token
+// else, return false
+bool isTokenPunctuator(Token *t, Stream *s, int c) {
+	switch(c) {
+	// All characters that start a single token
+	case '[':
+		t->punctuator.c = puncLSBracket;
+		break;
+	case ']':
+		t->punctuator.c = puncRSBracket;
+		break;
+	case '(':
+		t->punctuator.c = puncLRBracket;
+		break;
+	case ')':
+		t->punctuator.c = puncRRBracket;
+		break;
+	case '{':
+		t->punctuator.c = puncLCBracket;
+		break;
+	case '}':
+		t->punctuator.c = puncRCBracket;
+		break;
+	case '~':
+		t->punctuator.c = puncTilde;
+		break;
+	case ',':
+		t->punctuator.c = puncComma;
+		break;
+	case '.':
+		t->punctuator.c = puncDot;
+		break;
+	case ';':
+		t->punctuator.c = puncSemicolon;
+		break;
+	case '?':
+		t->punctuator.c = puncQue;
+		break;
+	case ':':
+	       t->punctuator.c = puncColon;
+	       break;
+	case '+':
+		c = s->getNextChar();
+		switch(c) {
+		case '+':
+			t->punctuator.c = puncDPlus;
+			break;
+		case '=':
+			t->punctuator.c = puncEPlus;
+			break;
+		default:
+			t->punctuator.c = puncPlus;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '-':
+		c = s->getNextChar();
+		switch(c) {
+		case '-':
+			t->punctuator.c = puncDMinus;
+			break;
+		case '=':
+			t->punctuator.c = puncEMinus;
+			break;
+		case '>':
+			t->punctuator.c = puncArrow;
+		default:
+			t->punctuator.c = puncMinus;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '*':
+		c = s->getNextChar();
+		switch(c) {
+		case '=':
+			t->punctuator.c = puncEAsterisk;
+			break;
+		default:
+			t->punctuator.c = puncAsterisk;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '/':
+		c = s->getNextChar();
+		switch(c) {
+		case '=':
+			t->punctuator.c = puncESlash;
+			break;
+		default:
+			t->punctuator.c = puncSlash;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '=':
+		c = s->getNextChar();
+		switch(c) {
+		case '=':
+			t->punctuator.c = puncDEqual;
+			break;
+		default:
+			t->punctuator.c = puncEqual;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '%':
+		c = s->getNextChar();
+		switch(c) {
+		case '=':
+			t->punctuator.c = puncEPercent;
+			break;
+		default:
+			t->punctuator.c = puncPercent;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '&':
+		c = s->getNextChar();
+		switch(c) {
+		case '&':
+			t->punctuator.c = puncDAmp;
+			break;
+		case '=':
+			t->punctuator.c = puncEAmp;
+			break;
+		default:
+			t->punctuator.c = puncAmp;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '|':
+		c = s->getNextChar();
+		switch(c) {
+		case '|':
+			t->punctuator.c = puncDBar;
+			break;
+		case '=':
+			t->punctuator.c = puncEBar;
+			break;
+		default:
+			t->punctuator.c = puncBar;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '<':
+		c = s->getNextChar();
+		switch(c) {
+		case '<':
+			c = s->getNextChar();
+			switch(c) {
+			case '=':
+				t->punctuator.c = puncDELT;
+				break;
+			default:
+				t->punctuator.c = puncDLT;
+				s->pushLastChar(c);
+				break;
+			}
+			break;
+		case '=':
+			t->punctuator.c = puncELT;
+			break;
+		default:
+			t->punctuator.c = puncLT;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '>':
+		c = s->getNextChar();
+		switch(c) {
+		case '>':
+			c = s->getNextChar();
+			switch(c) {
+			case '=':
+				t->punctuator.c = puncDEGT;
+				break;
+			default:
+				t->punctuator.c = puncDGT;
+				s->pushLastChar(c);
+				break;
+			}
+			break;
+		case '=':
+			t->punctuator.c = puncEGT;
+			break;
+		default:
+			t->punctuator.c = puncGT;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '!':
+		c = s->getNextChar();
+		switch(c) {
+		case '=':
+			t->punctuator.c = puncEExcl;
+			break;
+		default:
+			t->punctuator.c = puncExcl;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	case '^':
+		c = s->getNextChar();
+		switch(c) {
+		case '=':
+			t->punctuator.c = puncECaret;
+			break;
+		default:
+			t->punctuator.c = puncCaret;
+			s->pushLastChar(c);
+			break;
+		}
+		break;
+	default:
+		t->punctuator.c = puncError;
+		break;
+	}
+	
+	t->type = tokenPunctuator;
+	return true;
+}
+
 void getNextToken(Token *t, Stream *s) {
 	int c = s->getNextChar();
 
@@ -177,4 +410,6 @@ void getNextToken(Token *t, Stream *s) {
 	if(isTokenIdentifier(t, s, c)) { return; }
 
 	if(isTokenIntegerConstant(t, s, c)) { return; }
+
+	if(isTokenPunctuator(t, s, c)) { return; }
 }

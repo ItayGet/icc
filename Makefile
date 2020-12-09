@@ -23,7 +23,7 @@ $(OBJDIR):
 .PHONY: debug clean
 
 debug: CFLAGS += -g
-debug: icc
+debug: all
 
 clean:
 	rm -f *~
