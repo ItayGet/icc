@@ -395,7 +395,7 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 	return true;
 }
 
-void getNextToken(Token *t, Stream *s) {
+void __getNextToken(Token *t, Stream *s) {
 	int c = s->getNextChar();
 
 	skipWhitespace(s, &c);

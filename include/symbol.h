@@ -26,7 +26,7 @@ typedef struct {
 
 		struct {
 			const char* name;
-		} type;
+		} typeS;
 
 		struct {
 			const char* name;
@@ -34,7 +34,6 @@ typedef struct {
 
 		struct {
 			const char* name;
-			Symbol type;
 		} variable;
-	}
+	};
 } Symbol;
