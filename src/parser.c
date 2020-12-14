@@ -3,17 +3,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// TODO: Add type checking
-
-// General paramters for parsing functions:
-// retInstr - Returns the IR instruction that contains the temporary that was calculated
-// prog - A reference to  a pointer of the last node of the IR program that is currently being built
-// 	If it weren't a reference to the pointer, after calling a parsing function you would have to
-// 	move the pointer all the way to the end every time
-// ts - The TokenStream from which all tokens are popped
-
-// Return assignInstr from an instruction that creates a temporary,
-// throw error if necessary
 void createAssignInstr(IrInstr *assignInstr, IrInstr *tempInstr) {
 	switch(tempInstr->action) {
 	// TODO: Check completely if lhs is l-value with type 
@@ -27,6 +16,20 @@ void createAssignInstr(IrInstr *assignInstr, IrInstr *tempInstr) {
 	}
 }
 
+void addInstructionAsArg(IrArg *arg, IrProg *tempProg, IrProg **prog) {
+	if(tempProg->val.action == actionUAssign) {
+		// Get rid of unary assigns
+		*arg = tempProg->val.a;
+		free(tempProg);
+	} else {
+		arg->type = argInstr;
+		arg->i = &tempProg->val;
+		(*prog)->next = tempProg;
+		*prog = tempProg;
+		tempProg->next = NULL;
+	}
+}
+
 void parseExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
 	parseAssignmentExpression(retInstr, prog, ts);
 
@@ -34,7 +37,7 @@ void parseExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
 	getNextToken(&t, ts);
 
 	// Assignment expression
-	if(t.type != puncComma) { pushBackToken(ts, &t); return; }
+	if(t.type != tokenPunctuator || t.punctuator.c != puncComma) { pushBackToken(ts, &t); return; }
 
 	parseExpression(retInstr, prog, ts);
 }
@@ -48,20 +51,15 @@ void parseAssignmentExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts
 	// Production without assignmentOperator
 	if(t.type != tokenPunctuator || t.punctuator.c != puncEqual) { pushBackToken(ts, &t); return; }
 
-	// Prepare for inserting final right hand side expression before assignment instruction
 	IrProg *rhsProg = malloc(sizeof(IrProg));
 	parseAssignmentExpression(&rhsProg->val, prog, ts);
 
 	IrProg *assignProg = malloc(sizeof(IrProg));
 	createAssignInstr(&assignProg->val, retInstr);
-	assignProg->val.b.type = argInstr;
-	assignProg->val.b.i = &rhsProg->val;
+	addInstructionAsArg(&assignProg->val.b, rhsProg, prog);
 
-	(*prog)->next = rhsProg;
-	rhsProg->next = assignProg;
-
+	(*prog)->next = assignProg;
 	assignProg->next = NULL;
-
 	(*prog) = assignProg;
 }
 
@@ -73,7 +71,7 @@ void parseAdditiveExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) 
 	while(true) {
 		getNextToken(&t, ts);
 
-		if(t.type != tokenPunctuator || t.punctuator.c != puncComma) { pushBackToken(ts, &t); return; }
+		if(t.type != tokenPunctuator) { break; }
 
 		InstrAction action;
 		switch(t.punctuator.c) {
@@ -93,21 +91,10 @@ void parseAdditiveExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) 
 		IrProg *bProg = malloc(sizeof(IrProg));
 		parsePrimaryExpression(&bProg->val, prog, ts);
 
+		// Create a new return insturction
 		retInstr->action = action;
-
-		retInstr->a.type = argInstr;
-		retInstr->a.i = &aProg->val;
-
-		retInstr->b.type = argInstr;
-		retInstr->b.i = &bProg->val;
-
-		(*prog)->next = aProg;
-		aProg->next = bProg;
-
-		bProg->next = NULL;
-
-		(*prog) = bProg;
-
+		addInstructionAsArg(&retInstr->a, aProg, prog);
+		addInstructionAsArg(&retInstr->b, bProg, prog);
 	}
 	breakLoop:
 	pushBackToken(ts, &t);
