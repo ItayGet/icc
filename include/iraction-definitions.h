@@ -3,6 +3,8 @@
 #define ACTION(NAME, STR)
 #endif
 
+ACTION(Error, "ERROR")
+
 // Binary operations(require 2 operands)
 ACTION(Add, "t = %s + %s")
 ACTION(Sub, "t = %s - %s")

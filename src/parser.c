@@ -73,7 +73,7 @@ void parseAdditiveExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) 
 	while(true) {
 		getNextToken(&t, ts);
 
-		if(t.type != tokenPunctuator) { break; }
+		if(t.type != tokenPunctuator || t.punctuator.c != puncComma) { pushBackToken(ts, &t); return; }
 
 		InstrAction action;
 		switch(t.punctuator.c) {

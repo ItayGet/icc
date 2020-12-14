@@ -11,6 +11,7 @@ typedef enum {
 } InstrAction;
 
 typedef enum {
+	argError,
 	argConst,
 	argInstr,
 	argSymbol
