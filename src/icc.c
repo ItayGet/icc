@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 char a[] = 
-"a = 5, b = a + 2";
+"a = 5, b = a + ";
 
 const char *b[] =
 {

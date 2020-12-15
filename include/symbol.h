@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "type.h"
+
 // Type of each symbol
 typedef enum {
 	symbolError,
@@ -24,15 +26,14 @@ typedef struct {
 			KeywordId id;
 		} keyword;
 
-		struct {
-			const char* name;
-		} typeS;
+		Type typeS;
 
 		struct {
 			const char* name;
 		} function;
 
 		struct {
+			Type type;
 			const char* name;
 		} variable;
 	};
