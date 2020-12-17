@@ -4,6 +4,7 @@
 
 #include "token.h"
 #include "symbol.h"
+#include "type.h"
 
 typedef enum {
 	#define ACTION(NAME, STR) action ## NAME,
@@ -34,7 +35,20 @@ typedef struct {
 
 // A single instruction for an IR program
 typedef struct IrInstr {
-	IrArg a, b;
+
+	union {
+		// Regular instructions
+		IrArg a;
+
+		// Cast instructions
+		TypeType type;
+
+		// Goto instructions
+		// TODO: Label label;
+	}
+
+	IrArg b;
+
 	InstrAction action;
 } IrInstr;
 

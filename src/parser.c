@@ -12,7 +12,7 @@ void createAssignInstr(IrInstr *assignInstr, IrInstr *tempInstr) {
 		assignInstr->action = actionAssign;
 		assignInstr->a = tempInstr->a;
 		return;
-	default: /* error */;
+	default: /* error: not lvalue */;
 	}
 }
 
@@ -28,6 +28,23 @@ void addInstructionAsArg(IrArg *arg, IrProg *tempProg, IrProg **prog) {
 		*prog = tempProg;
 		tempProg->next = NULL;
 	}
+}
+
+void widenArg(IrArg *arg, TypeType curr, TypeType wide, IrProg **prog) {
+	if(curr == wide) { return; }
+
+	IrProg *cast = malloc(sizeof(IrProg));
+
+	cast->val.action = actionCast;
+	cast->val.type = wide;
+	cast->val.b = *arg;
+
+	arg->type = argInstr;
+	arg->i = cast;
+
+	(*prog)->next = cast;
+	*prog = cast;
+
 }
 
 void parseExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {

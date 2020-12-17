@@ -22,7 +22,9 @@ ACTION(CompGreaterThan, "if %s > %s")
 ACTION(CompLessThanEqual, "if %s <= %s")
 ACTION(CompGreaterThanEqual, "if %s >= %s")
 
-// A separator between different operations
+ACTION(Cast, "(%d)%s")
+
+// A separator between binary and unary operations
 ACTION(Separator, "SEP")
 
 // Unary operations

@@ -9,6 +9,10 @@ typedef enum {
 	#include "type-definitions.h"
 } TypeType;
 
+#define IS_BASIC_TYPE(A) ((A) < typeSeparator)
+
+#define MAX_BASIC_TYPE(A, B) ((A) > (B) ? (A) : (B))
+
 struct Type;
 
 // A member node is a part of a linked list that contains every member of a record type and their offset
