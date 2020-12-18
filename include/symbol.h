@@ -33,7 +33,7 @@ typedef struct {
 		} function;
 
 		struct {
-			Type type;
+			Type *type;
 			const char* name;
 		} variable;
 	};
