@@ -27,7 +27,7 @@ void createAssignInstr(IrInstr *assignInstr, IrInstr *tempInstr);
 void addInstructionAsArg(IrArg *arg, IrProg *tempProg, IrProg **prog);
 
 // Widen argument by adding a casting instruction
-void widenArg(IrArg *arg, Type *curr, Type *wide, IrProg **prog);
+void widenArg(IrArg *arg, TypeType curr, TypeType wide, IrProg **prog);
 
 void parseExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts);
 void parseAssignmentExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts);

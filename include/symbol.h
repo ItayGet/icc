@@ -26,15 +26,16 @@ typedef struct {
 			KeywordId id;
 		} keyword;
 
-		Type typeS;
+		Type *typeS;
 
 		struct {
-			const char* name;
+			char *name;
 		} function;
 
 		struct {
 			Type *type;
-			const char* name;
 		} variable;
 	};
 } Symbol;
+
+void cleanSymbol(Symbol *s);

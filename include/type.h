@@ -9,7 +9,7 @@ typedef enum {
 	#include "type-definitions.h"
 } TypeType;
 
-#define IS_BASIC_TYPE(A) ((A) < typeSeparator)
+#define IS_BASIC_TYPE(A) ((A) > typeSeparator)
 
 #define MAX_BASIC_TYPE(A, B) ((A) > (B) ? (A) : (B))
 
@@ -25,7 +25,7 @@ typedef struct RecordMember {
 } RecordMember;
 
 typedef struct {
-	RecordMember member;
+	RecordMember *member;
 } RecordType;
 
 typedef struct {
@@ -39,14 +39,24 @@ typedef struct {
 
 // TODO: Add function type
 
-typedef struct {
+typedef struct Type {
 	TypeType type;
+
 	union {
 		RecordType record;
 		PointerType pointer;
 		ArrayType array;
 		// FunctionType function;
 	};
+
+	// Refernce counting
+	int references;
 } Type; 
+
+void makeType(Type *t);
+
+void increaseReferences(Type *t);
+
+void cleanType(Type *t);
 
 bool areTypesEqual(Type *a, Type *b);

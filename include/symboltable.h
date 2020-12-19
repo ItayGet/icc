@@ -4,7 +4,7 @@
 
 #include "symbol.h"
 
-#define BUCKETS 128
+#define BUCKETS 4
 
 typedef struct TableEntry {
 	char *key;
@@ -18,8 +18,14 @@ typedef struct {
 
 void makeSymbolTable(SymbolTable *st);
 
+void cleanSymbolTable(SymbolTable *st);
+
+void cleanTableEntry(TableEntry *te);
+
+TableEntry **getEntrySymbolTable(SymbolTable *st, char *key);
+
 void insertEntrySymbolTable(SymbolTable *st, char *key, Symbol *value);
 
-Symbol *getEntrySymbolTable(SymbolTable *st, char *key);
+Symbol *getValueSymbolTable(SymbolTable *st, char *key);
 
 void deleteEntrySymbolTable(SymbolTable *st, char *key);

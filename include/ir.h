@@ -45,7 +45,7 @@ typedef struct IrInstr {
 
 		// Goto instructions
 		// TODO: Label label;
-	}
+	};
 
 	IrArg b;
 

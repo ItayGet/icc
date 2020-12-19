@@ -40,7 +40,7 @@ void widenArg(IrArg *arg, TypeType curr, TypeType wide, IrProg **prog) {
 	cast->val.b = *arg;
 
 	arg->type = argInstr;
-	arg->i = cast;
+	arg->i = &cast->val;
 
 	(*prog)->next = cast;
 	*prog = cast;
@@ -129,7 +129,6 @@ void parsePrimaryExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
 
 		// FIXME: s not freed
 		s->type = symbolVariable;
-		s->variable.name = t->identifier.name;
 
 		retInstr->action = actionUAssign;
 		retInstr->a.type = argSymbol;
