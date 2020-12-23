@@ -3,52 +3,69 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void createAssignInstr(IrInstr *assignInstr, IrInstr *tempInstr) {
-	switch(tempInstr->action) {
-	// TODO: Check completely if lhs is l-value with type 
-	case actionUAssign:
-		if(tempInstr->a.type == argConst) { /* error: const cannot be l-value */ }
+void createAssignInstr(IrInstr *assignInstr, ExprRet *er) {
+	switch(er->arg->type) {
+	case argSymbol:
+		// A variable is the only viable lvalue
+		if(er->arg->s->type != symbolVariable) { /* error */ }
 
 		assignInstr->action = actionAssign;
-		assignInstr->a = tempInstr->a;
-		return;
-	default: /* error: not lvalue */;
+
+		assignInstr->a = *er->arg;
+		break;
+	case argInstr:;
+		// An instruction that is already part of the program that is being built
+		IrInstr *tempInstr = er->arg->i;
+
+		switch(tempInstr->action) {
+		case actionAssignDerefR:
+			if(er->type->type == typeArray) { /* error */ }
+
+			assignInstr->action = actionAssignDerefL;
+			assignInstr->a = tempInstr->a;
+			
+			// Disable the temporary instruction
+			tempInstr->action = actionNOP;
+			break;
+		case actionArrayAccess:
+			if(er->type->type == typeArray) { /* error */ }
+			
+			// If the original instruction was
+			// t_n = a[i]
+			// Now the action will be
+			// t_n = a + i
+			// And assignInstr
+			// *t_n = b
+
+			assignInstr->action = actionAssignDerefL;
+			assignInstr->a = *er->arg;
+
+			tempInstr->action = actionAdd;
+			break;
+		default: /* eror */;
+		}
+	default: /* error */;
 	}
 }
 
-void addInstructionAsArg(IrArg *arg, IrProg *tempProg, IrProg **prog) {
-	if(tempProg->val.action == actionUAssign) {
-		// Get rid of unary assigns
-		*arg = tempProg->val.a;
-		free(tempProg);
-	} else {
-		arg->type = argInstr;
-		arg->i = &tempProg->val;
-		(*prog)->next = tempProg;
-		*prog = tempProg;
-		tempProg->next = NULL;
-	}
-}
-
-void widenArg(IrArg *arg, TypeType curr, TypeType wide, IrProg **prog) {
+void widenArg(IrArg *arg, ScopeContext *sc, TypeType curr, TypeType wide) {
 	if(curr == wide) { return; }
 
-	IrProg *cast = malloc(sizeof(IrProg));
+	IrProg *castProg = malloc(sizeof(IrProg));
 
-	cast->val.action = actionCast;
-	cast->val.type = wide;
-	cast->val.b = *arg;
+	castProg->val.action = actionCast;
+	castProg->val.type = wide;
+	castProg->val.b = *arg;
 
 	arg->type = argInstr;
-	arg->i = &cast->val;
+	arg->i = &castProg->val;
 
-	(*prog)->next = cast;
-	*prog = cast;
-
+	*sc->prog = castProg;
+	sc->prog = &castProg->next;
 }
 
-void parseExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
-	parseAssignmentExpression(retInstr, prog, ts);
+void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
+	parseAssignmentExpression(er, sc, ts);
 
 	Token t;
 	getNextToken(&t, ts);
@@ -56,33 +73,61 @@ void parseExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
 	// Assignment expression
 	if(t.type != tokenPunctuator || t.punctuator.c != puncComma) { pushBackToken(ts, &t); return; }
 
-	parseExpression(retInstr, prog, ts);
+	parseExpression(er, sc, ts);
 }
 
-void parseAssignmentExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
-	parseAdditiveExpression(retInstr, prog, ts);
+void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
+	parseAdditiveExpression(er, sc, ts);
 
 	Token t;
 	getNextToken(&t, ts);
 
 	// Production without assignmentOperator
-	if(t.type != tokenPunctuator || t.punctuator.c != puncEqual) { pushBackToken(ts, &t); return; }
+	if(t.type != tokenPunctuator || t.punctuator.c != puncEqual) { 
+		pushBackToken(ts, &t);
+		t.type = tokenPunctuator;
+		return;
+	}
 
-	IrProg *rhsProg = malloc(sizeof(IrProg));
-	parseAssignmentExpression(&rhsProg->val, prog, ts);
+	if(er->type->type == typeFunction) { /* error */ }
+	if(er->type->type == typeArray) { /* error */ }
 
 	IrProg *assignProg = malloc(sizeof(IrProg));
-	createAssignInstr(&assignProg->val, retInstr);
-	addInstructionAsArg(&assignProg->val.b, rhsProg, prog);
+	createAssignInstr(&assignProg->val, er);
 
-	(*prog)->next = assignProg;
-	assignProg->next = NULL;
-	(*prog) = assignProg;
+	Type *lhsType = er->type;
+
+	parseAssignmentExpression(er, sc, ts);
+	
+	// Type check
+	if(lhsType->type == typeRecord) {
+		// Either a different type, which is an error, or a different
+		// record, which still is an error
+		if(lhsType != er->type) { /* error */ }
+
+		// TODO: Record equality
+	} else if(IS_BASIC_TYPE(lhsType->type)) {
+		if(!IS_BASIC_TYPE(er->type->type)) { /* error */ }
+
+		widenArg(er->arg, sc, er->type->type, lhsType->type);
+	} else {
+		// Only thing left is a pointer
+		
+		// TODO: Function assignment
+
+		if(er->type->type != typeArray && er->type->type != typePointer) { /* error */ }
+	}
+
+	cleanType(lhsType);
+
+	assignProg->val.b = *er->arg;
+
+	*sc->prog = assignProg;
+	sc->prog = &assignProg->next;
 }
 
-
-void parseAdditiveExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
-	parsePrimaryExpression(retInstr, prog, ts);
+void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
+	parsePrimaryExpression(er, sc, ts);
 
 	Token t;
 	while(true) {
@@ -102,51 +147,78 @@ void parseAdditiveExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) 
 			goto breakLoop;
 		}
 
-		IrProg *aProg = malloc(sizeof(IrProg));
-		aProg->val = *retInstr;
+		ExprRet rhsExpr;
 
-		IrProg *bProg = malloc(sizeof(IrProg));
-		parsePrimaryExpression(&bProg->val, prog, ts);
+		IrProg *arithProg = malloc(sizeof(IrProg));
+		IrInstr *arithInstr = &arithProg->val;
+		arithInstr->action = action;
+		rhsExpr.arg = &arithInstr->b;
+		arithInstr->a = *er->arg;
 
-		// Create a new return insturction
-		retInstr->action = action;
-		addInstructionAsArg(&retInstr->a, aProg, prog);
-		addInstructionAsArg(&retInstr->b, bProg, prog);
+		parsePrimaryExpression(&rhsExpr, sc, ts);
+
+		Type *lhsType = er->type;
+
+		TypeType lhsBType = er->type->type;
+		TypeType rhsBType = rhsExpr.type->type;
+
+		// Type check
+		if(IS_BASIC_TYPE(lhsBType) && IS_BASIC_TYPE(rhsBType)) {
+			Type *wide = lhsBType > rhsBType ? lhsType : rhsExpr.type;
+			widenArg(&arithInstr->a, sc, lhsBType, wide->type);
+			widenArg(&arithInstr->b, sc, rhsBType, wide->type);
+
+			er->type = wide;
+		} else if(lhsBType == typePointer || rhsBType == typePointer) {
+			// TODO: Pointer arithmetic
+			// Before that a better representation for the token inside IrArg should be implemented
+		} else { /* error */ }
+
+		increaseReferences(er->type);
+		cleanType(lhsType);
+		cleanType(rhsExpr.type);
+
+		// Set new value for er
+		er->arg->type = argInstr;
+		er->arg->i = &arithProg->val;
+
+		*sc->prog = arithProg;
+		sc->prog = &arithProg->next;
 	}
 	breakLoop:
 	pushBackToken(ts, &t);
 }
 
-void parsePrimaryExpression(IrInstr *retInstr, IrProg **prog, TokenStream *ts) {
-	// FIXME: t not freed
-	Token *t = malloc(sizeof(Token));
-	getNextToken(t, ts);
+void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
+	Token t;
+	getNextToken(&t, ts);
 
-	Symbol *s = malloc(sizeof(Symbol));
-	switch(t->type) {
-	case tokenIdentifier:
-		// TODO: Get from symbol table
+	switch(t.type) {
+	case tokenIdentifier:;
+		Symbol *s = getValueSymbolTable(sc->st, t.identifier.name);
 
-		// FIXME: s not freed
-		s->type = symbolVariable;
+		if(s == NULL) { /* error */ }
+		if(s->type != symbolVariable) { /* error */ }
 
-		retInstr->action = actionUAssign;
-		retInstr->a.type = argSymbol;
-		retInstr->a.s = s;
+		er->arg->type = argSymbol;
+		er->arg->s = s;
+
+		er->type = s->variable.type;
+		increaseReferences(er->type);
+
+		free(t.identifier.name);
 		break;
 	case tokenIntegerConstant:
-		retInstr->action = actionUAssign;
-		retInstr->a.type = argConst;
-		retInstr->a.t = t;
+		// TODO: Parse integer constants
 		break;
 	case tokenPunctuator:
-		if(t->punctuator.c != puncLRBracket) { /* error */ }
+		if(t.punctuator.c != puncLRBracket) { /* error */ }
 
-		parseExpression(retInstr, prog, ts);
+		parseExpression(er, sc, ts);
 
-		getNextToken(t, ts);
+		getNextToken(&t, ts);
 
-		if(t->type != tokenPunctuator || t->punctuator.c != puncRRBracket) { /* error */ }
+		if(t.type != tokenPunctuator || t.punctuator.c != puncRRBracket) { /* error */ }
 	default: /* error */;
 	}
 }

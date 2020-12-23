@@ -9,7 +9,6 @@ typedef enum {
 	symbolError,
 	symbolKeyword,
 	symbolType,
-	symbolFunction,
 	symbolVariable,
 } SymbolType;
 
@@ -27,10 +26,6 @@ typedef struct {
 		} keyword;
 
 		Type *typeS;
-
-		struct {
-			char *name;
-		} function;
 
 		struct {
 			Type *type;

@@ -15,7 +15,7 @@ typedef enum {
 	argError,
 	argConst,
 	argInstr,
-	argSymbol
+	argSymbol,
 } ArgType;
 
 struct IrInstr;
@@ -35,7 +35,6 @@ typedef struct {
 
 // A single instruction for an IR program
 typedef struct IrInstr {
-
 	union {
 		// Regular instructions
 		IrArg a;
@@ -57,3 +56,5 @@ typedef struct IrProg {
 	IrInstr val;
 	struct IrProg *next;
 } IrProg;
+
+void cleanIrProg(IrProg *prog);

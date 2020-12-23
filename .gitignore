@@ -1,3 +1,5 @@
 icc
 *.o
 obj
+.ccls
+.ccls-cache

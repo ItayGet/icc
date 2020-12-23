@@ -7,7 +7,7 @@ OBJDIR = ./obj
 CFLAGS = -I$(INCDIR)
 LIBS = -lm
 
-OBJ = lex.o stringbuilder.o literal.o parser.o token-stream.o icc.o symboltable.o type.o symbol.o
+OBJ = lex.o stringbuilder.o literal.o parser.o token-stream.o icc.o symboltable.o type.o symbol.o ir.o
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -19,7 +19,7 @@ icc: $(OBJ:%=$(OBJDIR)/%)
 
 $(OBJDIR): 
 	mkdir $(OBJDIR)
-
+	
 .PHONY: debug clean
 
 debug: CFLAGS += -g

@@ -1,158 +1,171 @@
 // Main file, currently holds temporary code that uses the latest system that was implemented
-// Currently used to test the symboltable
+// Currently used to test IR code generation, implicit casts and to check if leaks happen
 
-#include "symboltable.h"
+#include "parser.h"
+#include "token-stream.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-const char *a[] = {
+char progStr[] = "a = b";
+// Other strings that were tested include:
+// a = b + a
+// a = a + b
+
+#define size(arr) sizeof(arr)/sizeof(arr[0])
+
+int i = 0;
+int getNextChar() { if(i < size(progStr) - 1) { return progStr[i++]; } return EOF; }
+void pushLastChar(int c) { progStr[--i] = c; }
+
+const char *actionStrings[] =
+{
+	#define ACTION(NAME, STR) STR,
+	#include "iraction-definitions.h"
+};
+
+const char *typeStrings[] = {
 	#define TYPE(NAME, STR) STR,
 	#include "type-definitions.h"
 };
 
-void stringifyType(Type *t, char *s) {
+void stringifyType(char *s, Type *t) {
 	if(IS_BASIC_TYPE(t->type)) {
-		strcpy(s, a[t->type]);
+		strcpy(s, typeStrings[t->type]);
 		return;
 	}
 
 	char *tStr;
 	switch(t->type) {
 	case typeRecord:
-		sprintf(s, a[t->type], "struct");
+		sprintf(s, typeStrings[t->type], "struct");
 		break;
 	case typePointer:;
 		tStr = malloc(sizeof(char) * 4096);
-		stringifyType(t->pointer.type, tStr);
-		sprintf(s, a[t->type], tStr);
+		stringifyType(tStr, t->pointer.type);
+		sprintf(s, typeStrings[t->type], tStr);
 		free(tStr);
 		break;
 	case typeArray:;
 		tStr = malloc(sizeof(char) * 4096);
-		stringifyType(t->array.type, tStr);
-		sprintf(s, a[t->type], tStr, t->array.length);
+		stringifyType(tStr, t->array.type);
+		sprintf(s, typeStrings[t->type], tStr, t->array.length);
 		free(tStr);
 		break;
 	}
 }
 
-void printType(Type *t) {
+void stringifyInstr(char *s, IrInstr *instr, int levels);
+void stringifyArg(char *s, IrArg *arg, int levels) {
+	char *tStr;
+	switch(arg->type) {
+	case argSymbol:
+		if(arg->s->type != symbolVariable) { /* error */ }
+
+		tStr = malloc(sizeof(char) * 4096);
+		stringifyType(tStr, arg->s->variable.type);
+		sprintf(s, "[%s]", tStr);
+		free(tStr);
+		break;
+	case argInstr:;
+		if(levels) {
+			strcpy(s, "t");
+		} else {
+			tStr = malloc(sizeof(char) * 4096);
+			stringifyInstr(tStr, arg->i, levels-1);
+			sprintf(s, "{ %s }", tStr);
+			free(tStr);
+		}
+		break;
+	default: /* error */;
+	}
+}
+
+void stringifyInstr(char *s, IrInstr *instr, int levels) {
+	char *aStr = malloc(sizeof(char) * 4096);
+	if(instr->action == actionCast) {
+		strcpy(aStr, typeStrings[instr->type]);
+	} else {
+		stringifyArg(aStr, &instr->a, levels-1);
+	}
+
+	char *bStr = malloc(sizeof(char) * 4096);
+
+	if(instr->action < actionSeparator) {
+		// Binary action
+		stringifyArg(bStr, &instr->b, levels-1);
+	} else {
+		strcpy(bStr, "");
+	}
+
+	sprintf(s, actionStrings[instr->action], aStr, bStr);
+	free(aStr);
+	free(bStr);
+}
+
+void printProg(IrProg *prog) {
+	if(!prog) { return; }
+
 	char *s = malloc(sizeof(char) * 4096);
-	stringifyType(t, s);
-	printf("%s", s);
+	stringifyInstr(s, &prog->val, 1);
+	puts(s);
 	free(s);
 
-}
-
-void printSymbol(Symbol *s) {
-	switch(s->type) {
-	case symbolType:
-		printType(s->typeS);
-		break;
-	case symbolFunction:
-		printf("%s", s->function.name);
-		break;
-	case symbolVariable:
-		printf("var of type ");
-		printType(s->variable.type);
-		break;
-	}
-}
-
-void printSymbolTable(SymbolTable *st) {
-	for(int i = 0; i < BUCKETS; i++) {
-		TableEntry *entry = st->entries[i];
-
-		if(!entry) { continue; }
-
-		printf("%d = \n", i);
-
-		do {
-			printf("	key: %s, value: ", entry->key);
-			printSymbol(entry->value);
-			printf("\n");
-
-			entry = entry->next;
-		}while(entry);
-	}
+	printProg(prog->next);
 }
 
 #define FAST_STR(VARNAME, STR) char *VARNAME = malloc(sizeof(char) * 4096); strcpy(VARNAME, STR);
 
 int main() {
+	Stream s = { getNextChar, pushLastChar };
+	TokenStream ts = { s };
+	makeTokenStream(&ts);
+
+	ScopeContext sc;
+
+	IrProg *prog;
+	sc.prog = &prog;
+
 	SymbolTable st;
 	makeSymbolTable(&st);
 
-	SymbolTable st2;
-	makeSymbolTable(&st2);
-
-	Symbol* s;
-
-	FAST_STR(intStr, "int");
+	// Make types
 	Type *intT = malloc(sizeof(Type));
-	makeType(intT);
 	intT->type = typeInt;
-	s = malloc(sizeof(Symbol));
-	s->type = symbolType;
-	s->typeS = intT;
 
+	Type *charT = malloc(sizeof(Type));
+	charT->type = typeChar;
 
-	insertEntrySymbolTable(&st, intStr, s);
-
-	FAST_STR(xStr, "x");
-	s = malloc(sizeof(Symbol));
-	s->type = symbolVariable;
-	s->variable.type  = intT;
+	// Make symbols
+	Symbol *aS = malloc(sizeof(Symbol));
+	aS->type = symbolVariable;
+	aS->variable.type = intT;
 	increaseReferences(intT);
 
-	insertEntrySymbolTable(&st, xStr, s);
+	Symbol *bS = malloc(sizeof(Symbol));
+	bS->type = symbolVariable;
+	bS->variable.type = charT;
+	increaseReferences(charT);
 
-	FAST_STR(ptrStr, "ptr");
-	s = malloc(sizeof(Symbol));
-	Type *ptrT = malloc(sizeof(Type));
-	makeType(ptrT);
-	ptrT->type = typePointer;
-	increaseReferences(intT);
-	ptrT->pointer.type = intT;
-	s->type = symbolVariable;
-	s->variable.type = ptrT;
+	// Insert symbols into SymbolTable
+	FAST_STR(aStr, "a");
+	insertEntrySymbolTable(&st, aStr, aS);
 
-	insertEntrySymbolTable(&st2, ptrStr, s);
+	FAST_STR(bStr, "b");
+	insertEntrySymbolTable(&st, bStr, bS);
 
-	FAST_STR(arrStr, "arr");
-	s = malloc(sizeof(Symbol));
-	Type *arrT = malloc(sizeof(Type));
-	makeType(arrT);
-	arrT->type = typeArray;
-	increaseReferences(intT);
-	arrT->array.type = intT;
-	arrT->array.length = 5;
-	s->type = symbolVariable;
-	s->variable.type = arrT;
+	sc.st = &st;
 
-	insertEntrySymbolTable(&st2, arrStr, s);
+	IrArg arg;
+	ExprRet er;
+	er.arg = &arg;
 
-	puts("Here hold this");
-	printSymbol(getValueSymbolTable(&st2, "arr"));
-	puts("");
-	printSymbol(getValueSymbolTable(&st, "x"));
-	puts("");
-	printSymbol(getValueSymbolTable(&st, "int"));
-	puts("");
+	parseExpression(&er, &sc, &ts);
 
-	puts("st:");
-	printSymbolTable(&st);
-	puts("st2:");
-	printSymbolTable(&st2);
+	printProg(prog);
 
+	cleanIrProg(prog);
 	cleanSymbolTable(&st);
-
-	puts("Here hold this too");
-	printSymbol(getValueSymbolTable(&st2, "ptr"));
-	puts("");
-
-
-	cleanSymbolTable(&st2);
+	cleanType(er.type);
 }
