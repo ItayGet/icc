@@ -11,9 +11,13 @@ The backend will generate x86 assembly.
 - [ ] Floating constants
 - [x] Punctuators
 - [ ] Preprocessor tokens
-### Parsing
-- [ ] Nothing
-### Intermediate code generation
-- [ ] Nothing
+### Parsing and intermediate code generation
+- [x] A type system
+- [x] A symbol table
+- [x] Expressions for addition, subtraction and assignment
+- [x] Implicit casts
+- [ ] Errors
+- [ ] Constants
+- [ ] Any kind of statement
 ### Back-end
 - [ ] Nothing
