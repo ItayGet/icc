@@ -11,8 +11,9 @@ The backend will generate x86 assembly.
 - [ ] Floating constants
 - [x] Punctuators
 - [ ] Preprocessor tokens
+- [ ] Integer constant postfixes
 ### Parsing and intermediate code generation
-- [x] A type system
+- [ ] A type system. Current type system is not according to the C standard
 - [x] A symbol table
 - [x] Expressions for addition, subtraction and assignment
 - [x] Implicit casts
