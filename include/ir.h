@@ -8,7 +8,7 @@
 
 typedef enum {
 	#define ACTION(NAME, STR) action ## NAME,
-	#include "iraction-definitions.h"
+	#include "iraction.def"
 } InstrAction;
 
 typedef enum {

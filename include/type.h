@@ -6,7 +6,7 @@
 
 typedef enum {
 	#define TYPE(NAME, STR) type ## NAME,
-	#include "type-definitions.h"
+	#include "type.def"
 } TypeType;
 
 #define IS_BASIC_TYPE(A) ((A) > typeSeparator)

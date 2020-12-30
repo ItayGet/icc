@@ -14,7 +14,7 @@ typedef enum {
 // Punctuator types sometimes have values that exceed the limits of chars
 typedef enum {
 	#define TOKEN(NAME) NAME,
-	#include "token-definitions.h"
+	#include "token.def"
 } punctuatorType;
 
 typedef struct {

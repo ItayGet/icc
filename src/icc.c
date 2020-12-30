@@ -22,12 +22,12 @@ void pushLastChar(int c) { progStr[--i] = c; }
 const char *actionStrings[] =
 {
 	#define ACTION(NAME, STR) STR,
-	#include "iraction-definitions.h"
+	#include "iraction.def"
 };
 
 const char *typeStrings[] = {
 	#define TYPE(NAME, STR) STR,
-	#include "type-definitions.h"
+	#include "type.def"
 };
 
 void stringifyType(char *s, Type *t) {

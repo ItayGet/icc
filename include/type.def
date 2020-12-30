@@ -3,7 +3,6 @@
 #define TYPE(NAME, STR)
 #endif
 
-// Order is the dictating whether implicit conversions are possible
 #ifndef BASIC_TYPE
 #define BASIC_TYPE(NAME, STR) TYPE(NAME, STR)
 #endif
