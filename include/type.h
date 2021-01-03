@@ -1,18 +1,37 @@
-// A system for types
+// Type system
 
 #pragma once
 
 #include <stdbool.h>
 
+// Whether a type is basic or which structural type it is
 typedef enum {
-	#define TYPE(NAME, STR) type ## NAME,
+	#define STRUCT_TYPE(NAME, STR) type ## NAME,
 	#include "type.def"
 } TypeType;
 
-#define IS_BASIC_TYPE(A) ((A) > typeSeparator)
+// All basic types
+typedef enum {
+	#define BASIC_TYPE(NAME, STR) basic ## NAME,
+	#include "type.def"
+} BasicType;
 
-#define MAX_BASIC_TYPE(A, B) ((A) > (B) ? (A) : (B))
+typedef enum {
+	basicTypeError, // Void mapped as an error
+	basicTypeSigned,
+	basicTypeUnsigned,
+	basicTypeFloat,
+} BasicTypeType;
 
+// A BasicType could be used as an index to get if the enum is either a signed, unsigned or float type,
+// represented by BasicTypeType
+extern BasicTypeType typeValuesArr[];
+
+#define IS_SIGNED(TYPE) typeValuesArr[TYPE] == basicTypeSigned
+#define IS_UNSIGNED(TYPE) typeValuesArr[TYPE] == basicTypeUnsigned
+#define IS_FLOAt(TYPE) typeValuesArr[TYPE] == basicTypeFloat
+
+// Forward declare Type
 struct Type;
 
 // A member node is a part of a linked list that contains every member of a record type and their offset
@@ -43,6 +62,7 @@ typedef struct Type {
 	TypeType type;
 
 	union {
+		BasicType basic;
 		RecordType record;
 		PointerType pointer;
 		ArrayType array;
@@ -51,12 +71,23 @@ typedef struct Type {
 
 	// Refernce counting
 	int references;
+
+	// TODO: Qualifiers
 } Type; 
 
 void makeType(Type *t);
 
-void increaseReferences(Type *t);
+void increaseReferencesType(Type *t);
 
 void cleanType(Type *t);
 
-bool areTypesEqual(Type *a, Type *b);
+// As defined in C99 6.3.1.1
+int getBasicTypeRank(BasicType basic);
+
+BasicType getUnignedBasicType(BasicType signedType);
+
+// As defined in C99 6.3.1.8
+BasicType doUsualArithConversion(BasicType a, BasicType b);
+
+// Helper function of doUsualArithConversion
+BasicType doUsualArithInt(BasicType signedType, BasicType unsignedType, int sRank, int uRank);

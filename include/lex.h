@@ -15,5 +15,6 @@ typedef struct {
 	void (*pushLastChar)(int);
 } Stream;
 
+
 // Get next token in input stream without being able to push it back
 void __getNextToken(Token *t, Stream *s);
