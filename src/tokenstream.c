@@ -1,4 +1,4 @@
-#include "token-stream.h"
+#include "tokenstream.h"
 
 #include <stddef.h>
 

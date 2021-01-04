@@ -4,7 +4,7 @@
 
 #include "ir.h"
 #include "lex.h"
-#include "token-stream.h"
+#include "tokenstream.h"
 #include "type.h"
 #include "symboltable.h"
 

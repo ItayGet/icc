@@ -2,7 +2,7 @@
 // Currently used to test IR code generation, implicit casts and to check if leaks happen
 
 #include "parser.h"
-#include "token-stream.h"
+#include "tokenstream.h"
 
 #include <stdlib.h>
 #include <stdio.h>
