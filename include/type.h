@@ -16,6 +16,14 @@ typedef enum {
 	#include "type.def"
 } BasicType;
 
+// The rank of a basic type
+// As defined in C99 6.3.1.1p1
+typedef int BasicRank;
+
+extern BasicRank basicRankValuesArr[];
+
+#define GET_BASIC_RANK(TYPE) (basicRankValuesArr[TYPE])
+
 typedef enum {
 	basicTypeError, // Void mapped as an error
 	basicTypeSigned,
@@ -25,11 +33,15 @@ typedef enum {
 
 // A BasicType could be used as an index to get if the enum is either a signed, unsigned or float type,
 // represented by BasicTypeType
-extern BasicTypeType typeValuesArr[];
+extern BasicTypeType basicTypeTypeValuesArr[];
 
-#define IS_SIGNED(TYPE) typeValuesArr[TYPE] == basicTypeSigned
-#define IS_UNSIGNED(TYPE) typeValuesArr[TYPE] == basicTypeUnsigned
-#define IS_FLOAt(TYPE) typeValuesArr[TYPE] == basicTypeFloat
+#define GET_BASIC_TYPE_TYPE(TYPE) (basicTypeTypeValuesArr[TYPE])
+
+#define IS_SIGNED(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] == basicTypeSigned)
+#define IS_UNSIGNED(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] == basicTypeUnsigned)
+#define IS_INTEGER(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] || IS_UNSIGNED(TYPE))
+#define IS_FLOAt(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] == basicTypeFloat)
+
 
 // Forward declare Type
 struct Type;
@@ -81,13 +93,6 @@ void increaseReferencesType(Type *t);
 
 void cleanType(Type *t);
 
-// As defined in C99 6.3.1.1
-int getBasicTypeRank(BasicType basic);
+bool areTypesEqual(Type *a, Type *b);
 
 BasicType getUnignedBasicType(BasicType signedType);
-
-// As defined in C99 6.3.1.8
-BasicType doUsualArithConversion(BasicType a, BasicType b);
-
-// Helper function of doUsualArithConversion
-BasicType doUsualArithInt(BasicType signedType, BasicType unsignedType, int sRank, int uRank);

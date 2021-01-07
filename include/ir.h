@@ -40,7 +40,7 @@ typedef struct IrInstr {
 		IrArg a;
 
 		// Cast instructions
-		TypeType type;
+		BasicType type;
 
 		// Goto instructions
 		// TODO: Label label;

@@ -33,9 +33,6 @@ typedef struct {
 // throw error if necessary
 void createAssignInstr(IrInstr *assignInstr, ExprRet *er);
 
-// Widen argument by adding a casting instruction
-void widenArg(IrArg *arg, ScopeContext *sc, TypeType curr, TypeType wide);
-
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);

@@ -3,12 +3,47 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-BasicTypeType typeValuesArr[] = {
+BasicTypeType basicTypeTypeValuesArr[] = {
 	#define BASIC_TYPE(NAME, STR) basicTypeError,
 	#define SIGNED_TYPE(NAME, STR) basicTypeSigned,
 	#define UNSIGNED_TYPE(NAME, STR) basicTypeUnsigned,
 	#define FLOAT_TYPE(NAME, STR) basicTypeFloat,
 	#include "type.def"
+};
+
+BasicRank basicRankValuesArr[] = {
+#define BASIC_TYPE(NAME, STR) __ ## NAME,
+#define __Error -1
+#define __Void 0
+#define __Char 1
+#define __UChar 1
+#define __SInt 2
+#define __USInt 2
+#define __Int 3
+#define __UInt 3
+#define __LInt 4
+#define __ULInt 4
+#define __LLInt 5
+#define __ULLInt 5
+#define __Float 6
+#define __Double 7
+#define __LDouble 8
+#include "type.def"
+#undef __Error
+#undef __Void
+#undef __Char
+#undef __UChar
+#undef __SInt
+#undef __USInt
+#undef __Int
+#undef __UInt
+#undef __LInt
+#undef __ULInt
+#undef __LLInt
+#undef __ULLInt
+#undef __Float
+#undef __Double
+#undef __LDouble
 };
 
 void makeType(Type *t) {
@@ -47,59 +82,26 @@ void cleanType(Type *t) {
 	free(t);
 }
 
-int getBasicTypeRank(BasicType basic) {
-	switch(basic) {
-	case basicChar:
-	case basicUChar:
-		return 1;
-	case basicSInt:
-	case basicUSInt:
-		return 2;
-	case basicInt:
-	case basicUInt:
-		return 3;
-	case basicLInt:
-	case basicULInt:
-		return 4;
-	case basicLLInt:
-	case basicULLInt:
-		return 5;
-	case basicFloat:
-		return 6;
-	case basicDouble:
-		return 7;
-	case basicLDouble:
-		return 8;
+bool areTypesEqual(Type *a, Type *b) {
+	// TODO: What about qualifiers?
+
+	if(a == b) { return true; }
+
+	if(a->type != b->type) { return false; }
+
+	switch(a->type) {
+	case typeBasic:
+		return a->basic != b->basic;
+	case typeRecord:
+		// a's address is not the same as b's meaning they are not the same struct
+		return false;
+	case typePointer:
+		return areTypesEqual(a->pointer.type, b->pointer.type);
+	case typeArray:
+		return a->array.length == b->array.length && areTypesEqual(a->array.type, b->array.type);
 	default:
-		return -1;
+		return false;
 	}
-}
-
-BasicType doUsualArithConversion(BasicType a, BasicType b) {
-	BasicTypeType ta = typeValuesArr[a], tb = typeValuesArr[b];
-
-	if(ta == tb) {
-		return a;
-	}
-
-	if(ta == basicTypeError || tb == basicTypeError) { /* error */ }
-
-	int aRank = getBasicTypeRank(a);
-	int bRank = getBasicTypeRank(b);
-
-	if(ta == basicTypeFloat || tb == basicTypeFloat) {
-		return a ? aRank > bRank : b;
-	}
-
-	BasicType ret;
-	// By deducing the state of the function, if a is signed then b is
-	// unsigned. Otherwise, b is signed
-	if(ta == basicTypeSigned) {
-		ret = doUsualArithInt(a, b, aRank, bRank);
-	} else {
-		ret = doUsualArithInt(b, a, bRank, aRank);
-	}
-	return ret;
 }
 
 BasicType getUnignedBasicType(BasicType signedType) {
@@ -117,15 +119,4 @@ BasicType getUnignedBasicType(BasicType signedType) {
 	default:
 		return basicError;
 	}
-}
-
-BasicType doUsualArithInt(BasicType signedType, BasicType unsignedType,
-			  int sRank, int uRank) {
-	if(uRank >= sRank) {
-		return unsignedType;
-	}
-
-	// FIXME: Use types' sizes to determine if the unsigned type could be
-	// held inside the signed type
-	return getUnignedBasicType(signedType);
 }

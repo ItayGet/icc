@@ -48,22 +48,6 @@ void createAssignInstr(IrInstr *assignInstr, ExprRet *er) {
 	}
 }
 
-void widenArg(IrArg *arg, ScopeContext *sc, TypeType curr, TypeType wide) {
-	if(curr == wide) { return; }
-
-	IrProg *castProg = malloc(sizeof(IrProg));
-
-	castProg->val.action = actionCast;
-	castProg->val.type = wide;
-	castProg->val.b = *arg;
-
-	arg->type = argInstr;
-	arg->i = &castProg->val;
-
-	*sc->prog = castProg;
-	sc->prog = &castProg->next;
-}
-
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	parseAssignmentExpression(er, sc, ts);
 
@@ -155,6 +139,7 @@ void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 		rhsExpr.arg = &arithInstr->b;
 		arithInstr->a = *er->arg;
 
+		// TODO: Replace with correct type of expression
 		parsePrimaryExpression(&rhsExpr, sc, ts);
 
 		Type *lhsType = er->type;
