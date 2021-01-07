@@ -13,12 +13,17 @@ The backend will generate x86 assembly.
 - [ ] Preprocessor tokens
 - [ ] Integer constant postfixes
 ### Parsing and intermediate code generation
-- [ ] A type system. Current type system is not according to the C standard
 - [x] A symbol table
 - [x] Expressions for addition, subtraction and assignment
-- [x] Implicit casts
+- [ ] Expression with short-circuit code
 - [ ] Errors
 - [ ] Constants
 - [ ] Any kind of statement
+### Type system
+- [x] Basic type system
+- [x] Implicit casts
+- [ ] Functions
+- [ ] Getting sizes of basic types or record types
+- [ ] Getting the right type for expression like pointer subtraction or the sizeof operator
 ### Back-end
 - [ ] Nothing
