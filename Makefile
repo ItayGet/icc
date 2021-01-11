@@ -4,7 +4,7 @@ INCDIR = ./include
 SRCDIR = ./src
 OBJDIR = ./obj
 
-CFLAGS = -I$(INCDIR)
+CFLAGS = -I$(INCDIR) -fdiagnostics-color=always
 LIBS = -lm
 
 OBJ = lex.o stringbuilder.o literal.o parser.o tokenstream.o icc.o symboltable.o type.o symbol.o ir.o parser-type.o

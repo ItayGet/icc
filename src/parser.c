@@ -1,5 +1,7 @@
 #include "parser.h"
 
+#include "parser-type.h"
+
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -77,6 +79,11 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	if(er->type->type == typeArray) { /* error */ }
 
 	IrProg *assignProg = malloc(sizeof(IrProg));
+
+	if(er->type->type == typeRecord) {
+		// TODO: Assignment in records
+	}
+
 	createAssignInstr(&assignProg->val, er);
 
 	Type *lhsType = er->type;
@@ -84,26 +91,9 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	parseAssignmentExpression(er, sc, ts);
 	
 	// Type check
-	if(lhsType->type == typeRecord) {
-		// Either a different type, which is an error, or a different
-		// record, which still is an error
-		if(lhsType != er->type) { /* error */ }
-
-		// TODO: Record equality
-	} else if(IS_BASIC_TYPE(lhsType->type)) {
-		if(!IS_BASIC_TYPE(er->type->type)) { /* error */ }
-
-		widenArg(er->arg, sc, er->type->type, lhsType->type);
-	} else {
-		// Only thing left is a pointer
-		
-		// TODO: Function assignment
-
-		if(er->type->type != typeArray && er->type->type != typePointer) { /* error */ }
-	}
-
+	castAssignmentExpression(er, sc, lhsType);
 	cleanType(lhsType);
-
+	
 	assignProg->val.b = *er->arg;
 
 	*sc->prog = assignProg;
@@ -131,7 +121,7 @@ void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 			goto breakLoop;
 		}
 
-		ExprRet rhsExpr;
+		ExprRet rhsExpr, lhsExpr;
 
 		IrProg *arithProg = malloc(sizeof(IrProg));
 		IrInstr *arithInstr = &arithProg->val;
@@ -139,29 +129,15 @@ void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 		rhsExpr.arg = &arithInstr->b;
 		arithInstr->a = *er->arg;
 
+		lhsExpr.arg = &arithInstr->a;
+		lhsExpr.type = er->type;
+
 		// TODO: Replace with correct type of expression
 		parsePrimaryExpression(&rhsExpr, sc, ts);
 
-		Type *lhsType = er->type;
-
-		TypeType lhsBType = er->type->type;
-		TypeType rhsBType = rhsExpr.type->type;
-
 		// Type check
-		if(IS_BASIC_TYPE(lhsBType) && IS_BASIC_TYPE(rhsBType)) {
-			Type *wide = lhsBType > rhsBType ? lhsType : rhsExpr.type;
-			widenArg(&arithInstr->a, sc, lhsBType, wide->type);
-			widenArg(&arithInstr->b, sc, rhsBType, wide->type);
-
-			er->type = wide;
-		} else if(lhsBType == typePointer || rhsBType == typePointer) {
-			// TODO: Pointer arithmetic
-			// Before that a better representation for the token inside IrArg should be implemented
-		} else { /* error */ }
-
-		increaseReferences(er->type);
-		cleanType(lhsType);
-		cleanType(rhsExpr.type);
+		er->type = castAdditiveExpression(&lhsExpr, &rhsExpr, sc, action == actionSub);
+		cleanType(lhsExpr.type);
 
 		// Set new value for er
 		er->arg->type = argInstr;
@@ -189,7 +165,7 @@ void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 		er->arg->s = s;
 
 		er->type = s->variable.type;
-		increaseReferences(er->type);
+		increaseReferencesType(er->type);
 
 		free(t.identifier.name);
 		break;

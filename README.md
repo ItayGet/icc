@@ -12,18 +12,18 @@ The backend will generate x86 assembly.
 - [x] Punctuators
 - [ ] Preprocessor tokens
 - [ ] Integer constant postfixes
-### Parsing and intermediate code generation
+### Parsing and intermediate code generation:
 - [x] A symbol table
 - [x] Expressions for addition, subtraction and assignment
 - [ ] Expression with short-circuit code
 - [ ] Errors
 - [ ] Constants
 - [ ] Any kind of statement
-### Type system
+### Type system:
 - [x] Basic type system
 - [x] Implicit casts
 - [ ] Functions
 - [ ] Getting sizes of basic types or record types
 - [ ] Getting the right type for expression like pointer subtraction or the sizeof operator
-### Back-end
+### Back-end:
 - [ ] Nothing

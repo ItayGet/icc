@@ -37,10 +37,10 @@ extern BasicTypeType basicTypeTypeValuesArr[];
 
 #define GET_BASIC_TYPE_TYPE(TYPE) (basicTypeTypeValuesArr[TYPE])
 
-#define IS_SIGNED(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] == basicTypeSigned)
-#define IS_UNSIGNED(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] == basicTypeUnsigned)
-#define IS_INTEGER(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] || IS_UNSIGNED(TYPE))
-#define IS_FLOAt(TYPE) (GET_BASIC_TYPE_TYPE[TYPE] == basicTypeFloat)
+#define IS_SIGNED(TYPE) (GET_BASIC_TYPE_TYPE(TYPE) == basicTypeSigned)
+#define IS_UNSIGNED(TYPE) (GET_BASIC_TYPE_TYPE(TYPE) == basicTypeUnsigned)
+#define IS_INTEGER(TYPE) (IS_SIGNED(TYPE) || IS_UNSIGNED(TYPE))
+#define IS_FLOAT(TYPE) (GET_BASIC_TYPE_TYPE(TYPE) == basicTypeFloat)
 
 
 // Forward declare Type

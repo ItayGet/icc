@@ -8,10 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
-char progStr[] = "a = b";
+char progStr[] = "b = a + b";
 // Other strings that were tested include:
-// a = b + a
-// a = a + b
+// b = b + a
+// b = a + b
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 
@@ -26,18 +26,21 @@ const char *actionStrings[] =
 };
 
 const char *typeStrings[] = {
-	#define TYPE(NAME, STR) STR,
+	#define STRUCT_TYPE(NAME, STR) STR,
+	#include "type.def"
+};
+
+const char *basicTypeStrings[] = {
+	#define BASIC_TYPE(NAME, STR) STR,
 	#include "type.def"
 };
 
 void stringifyType(char *s, Type *t) {
-	if(IS_BASIC_TYPE(t->type)) {
-		strcpy(s, typeStrings[t->type]);
-		return;
-	}
-
 	char *tStr;
 	switch(t->type) {
+	case typeBasic:
+		strcpy(s, basicTypeStrings[t->basic]);
+		break;
 	case typeRecord:
 		sprintf(s, typeStrings[t->type], "struct");
 		break;
@@ -85,7 +88,7 @@ void stringifyArg(char *s, IrArg *arg, int levels) {
 void stringifyInstr(char *s, IrInstr *instr, int levels) {
 	char *aStr = malloc(sizeof(char) * 4096);
 	if(instr->action == actionCast) {
-		strcpy(aStr, typeStrings[instr->type]);
+		strcpy(aStr, basicTypeStrings[instr->type]);
 	} else {
 		stringifyArg(aStr, &instr->a, levels-1);
 	}
@@ -132,21 +135,24 @@ int main() {
 
 	// Make types
 	Type *intT = malloc(sizeof(Type));
-	intT->type = typeInt;
+	intT->type = typeBasic;
+	intT->basic = basicInt;
+
 
 	Type *charT = malloc(sizeof(Type));
-	charT->type = typeChar;
+	charT->type = typeBasic;
+	charT->basic = basicChar;
 
 	// Make symbols
 	Symbol *aS = malloc(sizeof(Symbol));
 	aS->type = symbolVariable;
 	aS->variable.type = intT;
-	increaseReferences(intT);
+	increaseReferencesType(intT);
 
 	Symbol *bS = malloc(sizeof(Symbol));
 	bS->type = symbolVariable;
 	bS->variable.type = charT;
-	increaseReferences(charT);
+	increaseReferencesType(charT);
 
 	// Insert symbols into SymbolTable
 	FAST_STR(aStr, "a");

@@ -50,7 +50,7 @@ void makeType(Type *t) {
 	t->references = 1;
 }
 
-void increaseReferences(Type *t) {
+void increaseReferencesType(Type *t) {
 	t->references++;
 }
 

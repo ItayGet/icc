@@ -5,10 +5,15 @@
 #include "parser.h"
 #include "type.h"
 
+#include <stdbool.h>
+
 #define IS_ANY_TYPE_EQUAL(LHS, RHS, TYPE) ((LHS) == (TYPE) || (RHS) == (TYPE))
 
 // Cast a basic type
-void castIrArgBasicType(IrArg *arg, ScopeContext *sc, BasicType curr, BasicType castType);
+// er->type->type has to be typeBasic
+// Note that er->type is only used for reading the basic type and will not be
+// modified
+void castIrArgBasicType(ExprRet *er, ScopeContext *sc, BasicType castType);
 
 // As defined in C99 6.3.1.1p2
 BasicType promoteInteger(BasicType a, BasicRank *rank);
@@ -19,13 +24,13 @@ BasicType getUsualArithSingedUnsigned(BasicType signedType, BasicType unsignedTy
 // Helper function of doUsualArithConversion
 BasicType getUsualArithConversion(BasicType a, BasicType b);
 
+// All binary cast operations clean rhs and might use the buffer to return
+// while lhs stays unchanged and will not be cleaned
+
 // As defined in C99 6.3.1.8
-// lhs and rhs should be typeBasic
-// when returning, lhs should stay the same and not be cleaned while rhs will
-// be changed to the new type and returned
-// If you don't need the value of lhs anymore, you should clean it yourself
-Type *doUsualArithConversion(Type *lhs, Type *rhs);
+// lhs->type->type rhs->type->type should be typeBasic
+Type *doUsualArithConversion(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc);
 
 void castAssignmentExpression(ExprRet *rhs, ScopeContext *sc, Type *lhsType);
 
-Type *castAddExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc);
+Type *castAdditiveExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc, bool isSub);

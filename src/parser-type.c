@@ -2,17 +2,18 @@
 
 #include <stdlib.h>
 
-void castIrArgBasicType(IrArg *arg, ScopeContext *sc, BasicType curr, BasicType castType) {
-	if(curr == castType) { return; }
+void castIrArgBasicType(ExprRet *er, ScopeContext *sc, BasicType castType) {
+	if(er->type->basic == castType) { return; }
 
 	IrProg *castProg = malloc(sizeof(IrProg));
+	IrInstr *castInstr = &castProg->val;
 
-	castProg->val.action = actionCast;
-	castProg->val.type = castType;
-	castProg->val.b = *arg;
+	castInstr->action = actionCast;
+	castInstr->type = castType;
+	castInstr->b = *er->arg;
 
-	arg->type = argInstr;
-	arg->i = &castProg->val;
+	er->arg->type = argInstr;
+	er->arg->i = &castProg->val;
 
 	*sc->prog = castProg;
 	sc->prog = &castProg->next;
@@ -43,17 +44,13 @@ BasicType getUsualArithSingedUnsigned(BasicType signedType, BasicType unsignedTy
 BasicType getUsualArithConversion(BasicType a, BasicType b) {
 	BasicTypeType ta = GET_BASIC_TYPE_TYPE(a), tb = GET_BASIC_TYPE_TYPE(b);
 
-	if(ta == basicTypeError || tb == basicTypeError) { /* error */ }
+	if(IS_ANY_TYPE_EQUAL(ta, tb, basicTypeError)) { /* error */ }
 	
-	if(a == b) {
-		return a;
-	}
-
 	BasicRank aRank = GET_BASIC_RANK(a);
 	BasicRank bRank = GET_BASIC_RANK(b);
 
 	if(IS_ANY_TYPE_EQUAL(ta, tb, basicTypeFloat)) {
-		return a ? aRank > bRank : b;
+		return aRank > bRank  ? a : b;
 	}
 
 	// Integer promotion rules
@@ -61,7 +58,7 @@ BasicType getUsualArithConversion(BasicType a, BasicType b) {
 	b = promoteInteger(b, &bRank);
 
 	if(ta == tb) {
-		return a ? aRank > bRank : b;
+		return aRank > bRank  ? a : b;
 	}
 
 	BasicType ret;
@@ -80,7 +77,7 @@ void castAssignmentExpression(ExprRet *rhs, ScopeContext *sc, Type *lhsType) {
 
 	switch(lhsType->type) {
 	case typeRecord:
-		if(areTypesEqual(rhs->type, lhsType)) { /* error */ }
+		if(!areTypesEqual(rhs->type, lhsType)) { /* error */ }
 		break;
 	case typePointer:
 		if(rhs->type->type == typeArray || rhs->type->type == typePointer) {
@@ -88,34 +85,36 @@ void castAssignmentExpression(ExprRet *rhs, ScopeContext *sc, Type *lhsType) {
 		}
 		break;
 	case typeBasic:
-		if(rhs->type->type == typeBasic) { /* error */ }
-		castIrArgBasicType(rhs->arg, sc, rhs->type->basic, lhsType->basic);
+		if(rhs->type->type != typeBasic) { /* error */ }
+		castIrArgBasicType(rhs, sc, lhsType->basic);
 	case typeArray: /* error */;
 	case typeFunction: /* error */;
 	case typeError: /* error */;
 	}
 }
 
-Type *doUsualArithConversion(Type *lhs, Type *rhs) {
-	BasicType basic = getUsualArithConversion(lhs->basic, rhs->basic);
+Type *doUsualArithConversion(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc) {
+	BasicType basic = getUsualArithConversion(lhs->type->basic, rhs->type->basic);
+	castIrArgBasicType(lhs, sc, basic);
+	castIrArgBasicType(rhs, sc, basic);
 
 	// TODO: For every if statement in this function, add a check for
 	// whether the type in question has no qualifiers
 
 	// Try to keep resources for the types
-	if(rhs->basic == basic) {
+	if(rhs->type->basic == basic) {
 		// No memory changed because rhs is given as the new expression
 		// type and lhs should not be cleaned
-		return rhs;
+		return rhs->type;
 	}
 	
 	// If rhs will not be used as the return value, it should be cleaned
-	cleanType(rhs);
+	cleanType(rhs->type);
 
-	if(lhs->basic == basic) { 
+	if(lhs->type->basic == basic) { 
 		// lhs will now both stay as lhs and be returned
-		increaseReferencesType(lhs);
-		return lhs;
+		increaseReferencesType(lhs->type);
+		return lhs->type;
 	}
 
 	// The type of the expression is a type that does not exist so it should be initialized 
@@ -127,7 +126,7 @@ Type *doUsualArithConversion(Type *lhs, Type *rhs) {
 	return t;
 }
 
-Type *castAddExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc) {
+Type *castAdditiveExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc, bool isSub) {
 	TypeType lhsT = lhs->type->type, rhsT = rhs->type->type;
 
 	// These types are not applicable for arithmetic
@@ -151,6 +150,20 @@ Type *castAddExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc) {
 			rhs = tmp;
 		} else if(lhsT == typeBasic && IS_INTEGER(rhsT)) {
 			// Nothing to do, since lhs is the pointer
+		} else if(isSub &&
+				((lhsT == typePointer || lhsT == typeArray) &&
+				 (rhsT == typePointer || rhsT == typeArray))
+			 ) {
+			// Pointer subtraction
+			
+			// FIXME: change to ptr_diff type
+			Type *diffType = malloc(sizeof(Type));
+			makeType(diffType);
+			diffType->type = typeBasic;
+			diffType->basic = basicInt;
+
+			cleanType(rhs->type);
+			return diffType;
 		} else { /* error */ }
 
 		// TODO: Get the size of the pointee in lhs, add IR instructions for multiplying it by rhs and casting rhs to be size_t
@@ -158,6 +171,7 @@ Type *castAddExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc) {
 		cleanType(rhs->type);
 		return lhs->type;
 	} else if(lhsT == typeBasic && rhsT == typeBasic) {
-		return getUsualArithConversion(lhs, rhs);
+		return doUsualArithConversion(lhs, rhs, sc);
 	} else { /* error */ }
+	return NULL;
 }
