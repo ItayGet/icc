@@ -27,7 +27,27 @@ typedef struct {
 	// TODO: Should be able to use multiple scopes
 	// A pointer to the SymbolTable of the last scope
 	SymbolTable *st;
+
+	// A pointer to the function context
+	struct FunctionContext *fc;
 } ScopeContext;
+
+// A list to store all constants inside a function's IR
+typedef struct ConstantListNode {
+	Constant c;
+	struct ConstantListNode *next;
+} ConstantListNode;
+
+typedef struct FunctionContext {
+	// TODO: Store a list of all symboltables used inside function
+	
+	ConstantListNode *constants;
+	ConstantListNode **lastConstant;
+} FunctionContext;
+
+void makeFunctionContext(FunctionContext *fc);
+
+void cleanFunctionContext(FunctionContext *fc);
 
 // Return assignInstr, an instruction that is the assigning equivalent of tempArg
 // throw error if necessary

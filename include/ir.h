@@ -22,10 +22,10 @@ struct IrInstr;
 typedef struct {
 	ArgType type;
 	union {
-		// A token that is a constant
-		Token *t;
+		// A pointer to a constant
+		Constant *c;
 
-		// A pointer to the value of a diffent instruction
+		// A pointer to the result of a diffent instruction
 		struct IrInstr *i;
 
 		// A pointer to the symbol table

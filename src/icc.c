@@ -1,5 +1,5 @@
 // Main file, currently holds temporary code that uses the latest system that was implemented
-// Currently used to test IR code generation, implicit casts and to check if leaks happen
+// Currently used to test IR code generation, implicit casts, constant values and to check whether they create leaks
 
 #include "parser.h"
 #include "tokenstream.h"
@@ -8,10 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-char progStr[] = "b = a + b";
-// Other strings that were tested include:
-// b = b + a
-// b = a + b
+char progStr[] = "b = a + 1 + b - 5";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 
@@ -81,6 +78,8 @@ void stringifyArg(char *s, IrArg *arg, int levels) {
 			free(tStr);
 		}
 		break;
+	case argConst:
+		sprintf(s, "%d", arg->c->i);
 	default: /* error */;
 	}
 }
@@ -127,7 +126,11 @@ int main() {
 
 	ScopeContext sc;
 
-	IrProg *prog;
+	FunctionContext fc;
+	makeFunctionContext(&fc);
+	sc.fc = &fc;
+
+	IrProg *prog = 0;
 	sc.prog = &prog;
 
 	SymbolTable st;
@@ -173,5 +176,6 @@ int main() {
 
 	cleanIrProg(prog);
 	cleanSymbolTable(&st);
+	cleanFunctionContext(&fc);
 	cleanType(er.type);
 }

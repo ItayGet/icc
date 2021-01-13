@@ -157,7 +157,7 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 	s->pushLastChar(c);
 
 	t->type = tokenIntegerConstant;
-	t->integer.value = value;
+	t->constant.i = value;
 
 	return true;
 }

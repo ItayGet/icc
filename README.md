@@ -20,10 +20,10 @@ The backend will generate x86 assembly.
 - [ ] Constants
 - [ ] Any kind of statement
 ### Type system:
-- [x] Basic type system
+- [x] A basic type system
 - [x] Implicit casts
 - [ ] Functions
 - [ ] Getting sizes of basic types or record types
-- [ ] Getting the right type for expression like pointer subtraction or the sizeof operator
+- [ ] Getting the right type for expressions like pointer subtraction or the sizeof operator
 ### Back-end:
 - [ ] Nothing

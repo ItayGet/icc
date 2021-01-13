@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "constant.h"
+
 typedef enum {
 	tokenError,
 	tokenEOF,
@@ -32,8 +34,6 @@ typedef struct {
 			char* contents;
 		} stringLiteral;
 
-		struct {
-			int value;
-		} integer;
+		Constant constant;
 	};
 } Token;

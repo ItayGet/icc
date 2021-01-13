@@ -4,7 +4,7 @@
 
 #include "symbol.h"
 
-#define BUCKETS 4
+#define BUCKETS 128
 
 typedef struct TableEntry {
 	char *key;

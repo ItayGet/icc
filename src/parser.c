@@ -5,6 +5,21 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+void makeFunctionContext(FunctionContext *fc) {
+	fc->lastConstant = &fc->constants;
+	fc->constants = 0;
+}
+
+void cleanFunctionContext(FunctionContext *fc) {
+	ConstantListNode *n = fc->constants;
+	while(n) {
+		ConstantListNode *tmp = n;
+		n = n->next;
+
+		free(tmp);
+	}
+}
+
 void createAssignInstr(IrInstr *assignInstr, ExprRet *er) {
 	switch(er->arg->type) {
 	case argSymbol:
@@ -169,8 +184,28 @@ void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 
 		free(t.identifier.name);
 		break;
-	case tokenIntegerConstant:
-		// TODO: Parse integer constants
+	case tokenIntegerConstant:;
+		// FIXME: Other types of constants
+		
+		ConstantListNode *cln = malloc(sizeof(ConstantListNode));
+		cln->c = t.constant;
+		cln->next = 0;
+
+		*sc->fc->lastConstant = cln;
+		sc->fc->lastConstant = &cln->next;
+		
+		er->arg->type = argConst;
+		er->arg->c = &cln->c;
+
+		// OPTIMIZE: Hold an array of all basic types that will be
+		// initialized first time it is read so multiple expressions
+		// will have the same memory as a type
+		Type *type = malloc(sizeof(Type));
+		type->type = typeBasic;
+		type->basic = basicInt;
+		makeType(type);
+		er->type = type;
+
 		break;
 	case tokenPunctuator:
 		if(t.punctuator.c != puncLRBracket) { /* error */ }
