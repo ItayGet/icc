@@ -42,7 +42,7 @@ void createAssignInstr(IrInstr *assignInstr, ExprRet *er) {
 			assignInstr->a = tempInstr->a;
 			
 			// Disable the temporary instruction
-			tempInstr->action = actionNOP;
+			tempInstr->action = actionNop;
 			break;
 		case actionArrayAccess:
 			if(er->type->type == typeArray) { /* error */ }
@@ -65,6 +65,79 @@ void createAssignInstr(IrInstr *assignInstr, ExprRet *er) {
 	}
 }
 
+void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc) {
+	if(er->arg->type != argBackpatch) { return; }
+
+	// No need to clean er->type since it is already clean because er->arg
+	// is argBackpatch
+
+	// OPTIMIZE: Use global types
+	// HACK: Determine the type for the result of comparisons, for now use int
+	Type *exprType = malloc(sizeof(Type));
+	makeType(exprType);
+	exprType->type = typeBasic;
+	exprType->basic = basicInt;
+	er->type = exprType;
+
+	Symbol *temp = malloc(sizeof(Symbol));
+	temp->type = symbolVariable;
+	temp->variable.type = exprType;
+	increaseReferencesType(exprType);
+
+	// A temporary so key is empty string
+	char *key = malloc(sizeof(char) * 1);
+	*key = 0;
+
+	insertEntrySymbolTable(sc->st, key, temp);
+
+	// OPTIMIZE: Have global true and false constants?
+	ConstantListNode *zeroCln = malloc(sizeof(ConstantListNode));
+	ConstantListNode *oneCln = malloc(sizeof(ConstantListNode));
+	zeroCln->c.i = 0;
+	oneCln->c.i = 1;
+	*sc->fc->lastConstant = zeroCln;
+	zeroCln->next = oneCln;
+	sc->fc->lastConstant = &oneCln->next;
+
+	// in IR: temp = 1
+	IrProg *trueProg = malloc(sizeof(IrProg));
+	trueProg->val.action = actionAssign;
+	trueProg->val.a.type = argSymbol;
+	trueProg->val.a.s = temp;
+	trueProg->val.b.type = argConst;
+	trueProg->val.b.c = &oneCln->c;
+
+	// Instruction to skip assignment of temp to 0
+	// in IR: goto <uninitialized>
+	IrProg *gotoProg = malloc(sizeof(IrProg));
+	gotoProg->val.action = actionGoto;
+
+	trueProg->next = gotoProg;
+
+	// in IR: temp = 0
+	IrProg *falseProg = malloc(sizeof(IrProg));
+	falseProg->val.action = actionAssign;
+	falseProg->val.a.type = argSymbol;
+	falseProg->val.a.s = temp;
+	falseProg->val.b.type = argConst;
+	falseProg->val.b.c = &zeroCln->c;
+
+	gotoProg->next = falseProg;
+
+	gotoProg->val.label = &falseProg->next;
+
+	// Add created instructions into the program
+	*sc->prog = trueProg;
+
+	backpatchBackpatchList(er->arg->backpatch.trueList, sc->prog);
+	backpatchBackpatchList(er->arg->backpatch.falseList, &gotoProg->next);
+
+	sc->prog = &falseProg->next;
+
+	er->arg->type = argSymbol;
+	er->arg->s = temp;
+}
+
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	parseAssignmentExpression(er, sc, ts);
 
@@ -78,7 +151,7 @@ void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 }
 
 void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
-	parseAdditiveExpression(er, sc, ts);
+	parseEqualityExpression(er, sc, ts);
 
 	Token t;
 	getNextToken(&t, ts);
@@ -86,9 +159,10 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	// Production without assignmentOperator
 	if(t.type != tokenPunctuator || t.punctuator.c != puncEqual) { 
 		pushBackToken(ts, &t);
-		t.type = tokenPunctuator;
 		return;
 	}
+
+	createTemporaryFromBackpatch(er, sc);
 
 	if(er->type->type == typeFunction) { /* error */ }
 	if(er->type->type == typeArray) { /* error */ }
@@ -104,6 +178,7 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	Type *lhsType = er->type;
 
 	parseAssignmentExpression(er, sc, ts);
+	createTemporaryFromBackpatch(er, sc);
 	
 	// Type check
 	castAssignmentExpression(er, sc, lhsType);
@@ -113,6 +188,62 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 
 	*sc->prog = assignProg;
 	sc->prog = &assignProg->next;
+}
+
+// FIXME: Currently a proof of concept, fix later
+void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
+	parseAdditiveExpression(er, sc, ts);
+
+	Token t;
+	getNextToken(&t, ts);
+	
+	if(t.type != tokenPunctuator || t.punctuator.c != puncDEqual) {
+		pushBackToken(ts, &t);
+		return;
+	}
+
+	createTemporaryFromBackpatch(er, sc);
+
+	IrProg *compProg = malloc(sizeof(IrProg));
+	compProg->val.action = actionCompEqual;
+	compProg->val.a = *er->arg;
+
+	ExprRet rhsExpr;
+	rhsExpr.arg = &compProg->val.b;
+
+	parseAdditiveExpression(&rhsExpr, sc, ts);
+	createTemporaryFromBackpatch(&rhsExpr, sc);
+
+	// TODO: Type check
+	
+	cleanType(er->type);
+	cleanType(rhsExpr.type);
+
+	IrProg *condGotoProg = malloc(sizeof(IrProg));
+	condGotoProg->val.action = actionCondGoto;
+
+	compProg->next = condGotoProg;
+
+	IrProg *gotoProg = malloc(sizeof(IrProg));
+	gotoProg->val.action = actionGoto;
+
+	condGotoProg->next = gotoProg;
+
+	// Create backpackpatch lists
+	BackpatchListNode *trueList = malloc(sizeof(BackpatchListNode));
+	trueList->val = &compProg->next;
+	trueList->next = NULL;
+
+	BackpatchListNode *falseList = malloc(sizeof(BackpatchListNode));
+	falseList->val = &condGotoProg->next;
+	falseList->next = NULL;
+
+	er->arg->type = argBackpatch;
+	er->arg->backpatch.trueList = trueList;
+	er->arg->backpatch.falseList = falseList;
+
+	*sc->prog = compProg;
+	sc->prog = &gotoProg->next;
 }
 
 void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
@@ -136,6 +267,8 @@ void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 			goto breakLoop;
 		}
 
+		createTemporaryFromBackpatch(er, sc);
+
 		ExprRet rhsExpr, lhsExpr;
 
 		IrProg *arithProg = malloc(sizeof(IrProg));
@@ -149,6 +282,7 @@ void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 
 		// TODO: Replace with correct type of expression
 		parsePrimaryExpression(&rhsExpr, sc, ts);
+		createTemporaryFromBackpatch(&rhsExpr, sc);
 
 		// Type check
 		er->type = castAdditiveExpression(&lhsExpr, &rhsExpr, sc, action == actionSub);

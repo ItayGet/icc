@@ -16,12 +16,14 @@ typedef struct {
 	IrArg *arg;
 
 	// The type of the expression
+	// If arg has type argBackpatch type should be cleaned
 	Type *type;
 } ExprRet;
 
 // The context of the current scope
 typedef struct {
 	// A pointer to the last instruction in the context
+	// FIXME: Is a double pointer really needed?
 	IrProg **prog;
 
 	// TODO: Should be able to use multiple scopes
@@ -53,7 +55,13 @@ void cleanFunctionContext(FunctionContext *fc);
 // throw error if necessary
 void createAssignInstr(IrInstr *assignInstr, ExprRet *er);
 
+// Turn argBackpatch to a temporary by making a new temporary and assigning it
+// to either 1 or 0 for each true and false list respectively
+void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc);
+
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
+void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
+//TODO: Generalize all binary outputs into one
 void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);

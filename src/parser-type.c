@@ -119,6 +119,7 @@ Type *doUsualArithConversion(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc) {
 
 	// The type of the expression is a type that does not exist so it should be initialized 
 
+	// OPTIMIZE: Use global types
 	Type *t = malloc(sizeof(Type));
 	makeType(t);
 	t->type = typeBasic;

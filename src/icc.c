@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-char progStr[] = "b = a + 1 + b - 5";
+char progStr[] = "b = a == b";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 
@@ -86,10 +86,17 @@ void stringifyArg(char *s, IrArg *arg, int levels) {
 
 void stringifyInstr(char *s, IrInstr *instr, int levels) {
 	char *aStr = malloc(sizeof(char) * 4096);
-	if(instr->action == actionCast) {
+	switch(instr->action) {
+	case actionCast:
 		strcpy(aStr, basicTypeStrings[instr->type]);
-	} else {
+		break;
+	case actionGoto:
+	case actionCondGoto:
+		stringifyInstr(aStr, &(*instr->label)->val, 0);
+		break;
+	default:
 		stringifyArg(aStr, &instr->a, levels-1);
+		break;
 	}
 
 	char *bStr = malloc(sizeof(char) * 4096);

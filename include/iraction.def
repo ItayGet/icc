@@ -6,7 +6,7 @@
 ACTION(Error, "ERROR")
 
 // No operation
-ACTION(NOP, "NOP")
+ACTION(Nop, "NOP")
 
 // Binary operations(require 2 operands)
 ACTION(Add, "t = %s + %s")

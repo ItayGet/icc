@@ -16,9 +16,12 @@ typedef enum {
 	argConst,
 	argInstr,
 	argSymbol,
+	argBackpatch,
 } ArgType;
 
 struct IrInstr;
+struct IrProg;
+struct BackpatchListNode;
 typedef struct {
 	ArgType type;
 	union {
@@ -30,6 +33,13 @@ typedef struct {
 
 		// A pointer to the symbol table
 		Symbol *s;
+
+		// When an expression holds a boolean result, it will hold true
+		// and false lists of instructions that need to be overwritten
+		struct {
+			struct BackpatchListNode *trueList;
+			struct BackpatchListNode *falseList;
+		} backpatch;
 	};
 } IrArg;
 
@@ -42,8 +52,9 @@ typedef struct IrInstr {
 		// Cast instructions
 		BasicType type;
 
-		// Goto instructions
-		// TODO: Label label;
+		// For jump instructions
+		// Should point to next in IrProg
+		struct IrProg **label;
 	};
 
 	IrArg b;
@@ -57,4 +68,14 @@ typedef struct IrProg {
 	struct IrProg *next;
 } IrProg;
 
+typedef struct BackpatchListNode {
+	IrProg **val;
+	struct BackpatchListNode *next;
+} BackpatchListNode;
+
+// FIXME: Might be candidate for removal?
 void cleanIrProg(IrProg *prog);
+
+// Go through a BackpatchListNode, clean nodes and replace labels inside the
+// referenced instructions to parameters
+void backpatchBackpatchList(BackpatchListNode *bln, IrProg **label);
