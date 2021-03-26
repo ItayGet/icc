@@ -10,14 +10,34 @@
 
 #include <stdbool.h>
 
+// Type of return expression
+typedef enum {
+	exprRetRegular,
+	exprRegBackpatch,
+} ExprRetType;
+
 // The result of expressions
 typedef struct {
-	// An argument that is the result of the expression
-	IrArg *arg;
+	ExprRetType retType;
 
-	// The type of the expression
-	// If arg has type argBackpatch type should be cleaned
-	Type *type;
+	union {
+		// The normal result of an expression
+		struct {
+			// An argument that is the result of the expression
+			IrArg *arg;
+
+			// The type of the expression
+			// If arg has type argBackpatch type should be cleaned
+			Type *type;
+		};
+		
+		// When an expression holds a boolean result, it will hold true
+		// and false lists of instructions that need to be overwritten
+		struct {
+			struct BackpatchListNode *trueList;
+			struct BackpatchListNode *falseList;
+		} backpatch;
+	};
 } ExprRet;
 
 // The context of the current scope
@@ -61,7 +81,7 @@ void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc);
 
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
-void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 //TODO: Generalize all binary outputs into one
+void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);

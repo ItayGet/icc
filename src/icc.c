@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-char progStr[] = "b = a == b";
+char progStr[] = "b = b + a == b";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 

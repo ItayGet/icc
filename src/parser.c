@@ -66,10 +66,7 @@ void createAssignInstr(IrInstr *assignInstr, ExprRet *er) {
 }
 
 void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc) {
-	if(er->arg->type != argBackpatch) { return; }
-
-	// No need to clean er->type since it is already clean because er->arg
-	// is argBackpatch
+	if(er->retType != exprRegBackpatch) { return; }
 
 	// OPTIMIZE: Use global types
 	// HACK: Determine the type for the result of comparisons, for now use int
@@ -77,7 +74,6 @@ void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc) {
 	makeType(exprType);
 	exprType->type = typeBasic;
 	exprType->basic = basicInt;
-	er->type = exprType;
 
 	Symbol *temp = malloc(sizeof(Symbol));
 	temp->type = symbolVariable;
@@ -129,13 +125,16 @@ void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc) {
 	// Add created instructions into the program
 	*sc->prog = trueProg;
 
-	backpatchBackpatchList(er->arg->backpatch.trueList, sc->prog);
-	backpatchBackpatchList(er->arg->backpatch.falseList, &gotoProg->next);
+	backpatchBackpatchList(er->backpatch.trueList, sc->prog);
+	backpatchBackpatchList(er->backpatch.falseList, &gotoProg->next);
 
 	sc->prog = &falseProg->next;
 
 	er->arg->type = argSymbol;
 	er->arg->s = temp;
+
+	er->type = exprType;
+	er->retType = exprRetRegular;
 }
 
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
@@ -183,6 +182,8 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	// Type check
 	castAssignmentExpression(er, sc, lhsType);
 	cleanType(lhsType);
+
+	er->retType = exprRetRegular;
 	
 	assignProg->val.b = *er->arg;
 
@@ -238,9 +239,9 @@ void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	falseList->val = &condGotoProg->next;
 	falseList->next = NULL;
 
-	er->arg->type = argBackpatch;
-	er->arg->backpatch.trueList = trueList;
-	er->arg->backpatch.falseList = falseList;
+	er->retType = exprRegBackpatch;
+	er->backpatch.trueList = trueList;
+	er->backpatch.falseList = falseList;
 
 	*sc->prog = compProg;
 	sc->prog = &gotoProg->next;
@@ -292,6 +293,8 @@ void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 		er->arg->type = argInstr;
 		er->arg->i = &arithProg->val;
 
+		er->retType = exprRetRegular;
+
 		*sc->prog = arithProg;
 		sc->prog = &arithProg->next;
 	}
@@ -310,6 +313,8 @@ void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 		if(s == NULL) { /* error */ }
 		if(s->type != symbolVariable) { /* error */ }
 
+		er->retType = exprRetRegular;
+
 		er->arg->type = argSymbol;
 		er->arg->s = s;
 
@@ -327,6 +332,8 @@ void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 
 		*sc->fc->lastConstant = cln;
 		sc->fc->lastConstant = &cln->next;
+
+		er->retType = exprRetRegular;
 		
 		er->arg->type = argConst;
 		er->arg->c = &cln->c;

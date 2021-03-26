@@ -16,7 +16,6 @@ typedef enum {
 	argConst,
 	argInstr,
 	argSymbol,
-	argBackpatch,
 } ArgType;
 
 struct IrInstr;
@@ -33,13 +32,6 @@ typedef struct {
 
 		// A pointer to the symbol table
 		Symbol *s;
-
-		// When an expression holds a boolean result, it will hold true
-		// and false lists of instructions that need to be overwritten
-		struct {
-			struct BackpatchListNode *trueList;
-			struct BackpatchListNode *falseList;
-		} backpatch;
 	};
 } IrArg;
 
