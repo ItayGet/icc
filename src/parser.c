@@ -137,6 +137,51 @@ void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc) {
 	er->retType = exprRetRegular;
 }
 
+void createBackpatchFromArg(ExprRet *er, ScopeContext *sc) {
+	if(er->retType != exprRetRegular) { return; }
+
+	cleanType(er->type);
+
+	// OPTIMIZE: Have global true and false constants?
+	ConstantListNode *zeroCln = malloc(sizeof(ConstantListNode));
+	zeroCln->c.i = 0;
+	zeroCln->next = NULL;
+	*sc->fc->lastConstant = zeroCln;
+	sc->fc->lastConstant = &zeroCln->next;
+
+	IrProg *compProg = malloc(sizeof(IrProg));
+	compProg->val.a = *er->arg;
+	compProg->val.b.type = argConst;
+	compProg->val.b.c = &zeroCln->c;
+	compProg->val.action = actionCompEqual;
+
+	IrProg *condGotoProg = malloc(sizeof(IrProg));
+	condGotoProg->val.action = actionCondGoto;
+
+	IrProg *gotoProg = malloc(sizeof(IrProg));
+	gotoProg->val.action = actionGoto;
+
+	// OPTIMIZE: Make this a function
+	// Create backpackpatch lists
+	BackpatchListNode *trueList = malloc(sizeof(BackpatchListNode));
+	trueList->val = &compProg->next;
+	trueList->next = NULL;
+
+	BackpatchListNode *falseList = malloc(sizeof(BackpatchListNode));
+	falseList->val = &condGotoProg->next;
+	falseList->next = NULL;
+
+	er->retType = exprRegBackpatch;
+	er->backpatch.trueList = trueList;
+	er->backpatch.falseList = falseList;
+
+	compProg->next = condGotoProg;
+	condGotoProg->next = gotoProg;
+
+	*sc->prog = compProg;
+	sc->prog = &gotoProg->next;
+}
+
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	parseAssignmentExpression(er, sc, ts);
 
@@ -150,7 +195,7 @@ void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 }
 
 void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
-	parseEqualityExpression(er, sc, ts);
+	parseLogicalAndExpression(er, sc, ts);
 
 	Token t;
 	getNextToken(&t, ts);
@@ -191,6 +236,34 @@ void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	sc->prog = &assignProg->next;
 }
 
+void parseLogicalAndExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
+	parseEqualityExpression(er, sc, ts);
+
+	Token t;
+	getNextToken(&t, ts);
+	
+	if(t.type != tokenPunctuator || t.punctuator.c != puncDAmp) {
+		pushBackToken(ts, &t);
+		return;
+	}
+
+	createBackpatchFromArg(er, sc);
+
+	// sc->prog will later point to the calculation of the rhs of the expression
+	backpatchBackpatchList(er->backpatch.trueList, sc->prog);
+
+	// Save falseList to concatenate with rhs of expression
+	BackpatchListNode *lhsFalseList = er->backpatch.falseList;
+
+	parseEqualityExpression(er, sc, ts);
+	createBackpatchFromArg(er, sc);
+
+	// Concatenate rhs.falseList with lhs.falseList
+	BackpatchListNode** lastNode = &er->backpatch.falseList;
+	for(; *lastNode; lastNode = &(*lastNode)->next);
+	*lastNode = lhsFalseList;
+}
+
 // FIXME: Currently a proof of concept, fix later
 void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	parseAdditiveExpression(er, sc, ts);
@@ -212,6 +285,7 @@ void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts) {
 	ExprRet rhsExpr;
 	rhsExpr.arg = &compProg->val.b;
 
+	// FIXME: Can't chain equality expressions (eg a == b == c)
 	parseAdditiveExpression(&rhsExpr, sc, ts);
 	createTemporaryFromBackpatch(&rhsExpr, sc);
 

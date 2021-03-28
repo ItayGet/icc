@@ -75,13 +75,17 @@ void cleanFunctionContext(FunctionContext *fc);
 // throw error if necessary
 void createAssignInstr(IrInstr *assignInstr, ExprRet *er);
 
-// Turn argBackpatch to a temporary by making a new temporary and assigning it
+// Turn exprRegBackpatch to a temporary by making a new temporary and assigning it
 // to either 1 or 0 for each true and false list respectively
 void createTemporaryFromBackpatch(ExprRet *er, ScopeContext *sc);
+
+// Turn a regular argument to a backpatch by comparing it to 0
+void createBackpatchFromArg(ExprRet *er, ScopeContext *sc);
 
 void parseExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAssignmentExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 //TODO: Generalize all binary outputs into one
+void parseLogicalAndExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseEqualityExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parseAdditiveExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
 void parsePrimaryExpression(ExprRet *er, ScopeContext *sc, TokenStream *ts);
