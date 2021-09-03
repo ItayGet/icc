@@ -72,7 +72,7 @@ typedef enum {
 	exprAstBitwiseOrAssignment, // a |= b
 } ExprAstAssignmentOp;
 
-typedef struct  ExprAst{
+typedef struct  ExprAst {
 	ExprAstType type;
 	
 	// TODO: Expression type
@@ -104,7 +104,6 @@ typedef struct  ExprAst{
 		} MemberAccess;
 
 		struct {
-			// Finish struct
 			struct ExprAst *lhs, *rhs;
 			ExprAstUnaryOp op;
 		} Unary;
