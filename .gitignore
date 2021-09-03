@@ -1,3 +1,4 @@
 icc
 *.o
 obj
+.ccls
