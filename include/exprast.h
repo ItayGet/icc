@@ -2,6 +2,25 @@
 
 #pragma once
 
+// An ordered enum denoting expression's operator precendence
+typedef enum {
+	precPostfix,
+	precUnary,
+	precCast,
+	precMultiplicative,
+	precAdditive,
+	precShift,
+	precRelational,
+	precEquality,
+	precBitwiseAnd,
+	precBitwiseXor,
+	precBitwiseOr,
+	precLogicalAnd,
+	precLogicalOr,
+	precAssignment,
+	precComma,
+} OperatorPrec;
+
 typedef enum {
 	exprAstIdentifier, // a
 	exprAstConstant, // 1
@@ -149,4 +168,3 @@ typedef struct  ExprAst {
 	};
 		
 } ExprAst;
-
