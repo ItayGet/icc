@@ -4,21 +4,21 @@
 
 // An ordered enum denoting expression's operator precendence
 typedef enum {
-	precPostfix,
-	precUnary,
-	precCast,
-	precMultiplicative,
-	precAdditive,
-	precShift,
-	precRelational,
-	precEquality,
-	precBitwiseAnd,
-	precBitwiseXor,
-	precBitwiseOr,
-	precLogicalAnd,
-	precLogicalOr,
-	precAssignment,
 	precComma,
+	precAssignment,
+	precLogicalOr,
+	precLogicalAnd,
+	precBitwiseOr,
+	precBitwiseXor,
+	precBitwiseAnd,
+	precEquality,
+	precRelational,
+	precShift,
+	precAdditive,
+	precMultiplicative,
+	precCast,
+	precUnary,
+	precPostfix,
 } OperatorPrec;
 
 typedef enum {
