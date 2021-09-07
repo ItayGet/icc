@@ -123,7 +123,7 @@ typedef struct  ExprAst {
 		} MemberAccess;
 
 		struct {
-			struct ExprAst *lhs, *rhs;
+			struct ExprAst *operand;
 			ExprAstUnaryOp op;
 		} Unary;
 
