@@ -80,8 +80,8 @@ ExprAst *parseBinaryExpression(Stream *s, OperatorPrec prec) {
 		ExprAst *lhs = oper;
 		oper = malloc(sizeof(ExprAst));
 		oper->type = exprAstBinary;
-		oper->Binary.lhs = lhs;
-		oper->Binary.rhs = rhs;
+		oper->binary.lhs = lhs;
+		oper->binary.rhs = rhs;
 
 		// Decide the operator for the new operation
 		ExprAstBinaryOp op;
@@ -137,7 +137,7 @@ ExprAst *parseBinaryExpression(Stream *s, OperatorPrec prec) {
 		default: /* error */;
 		}
 
-		oper->Binary.op = op;
+		oper->binary.op = op;
 
 		// TODO: Type checking and assign a type
 	}
