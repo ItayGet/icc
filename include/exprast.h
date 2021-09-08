@@ -111,7 +111,7 @@ typedef struct  ExprAst {
 		} StringLiteral;
 
 		struct {
-			// Finish struct
+			struct ExprAst *array, *index;
 		} Index;
 
 		struct {
@@ -119,7 +119,10 @@ typedef struct  ExprAst {
 		} Call;
 
 		struct {
-			// Finish struct
+			struct ExprAst *record;
+			
+			// TODO: Temporary solution
+			char offset;
 		} MemberAccess;
 
 		struct {
