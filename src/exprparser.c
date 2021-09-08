@@ -3,6 +3,158 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+// A helper function of parseCastExpression that parses the operations of
+// postfix expression
+ExprAst *parsePostfixExpression(Stream *s, ExprAst *primaryExpression) {
+	// Expression should always hold the newest operation parsed
+	ExprAst *expression = primaryExpression;
+
+	while(true) {
+		Token t;
+		getNextToken(&t, s);
+
+		if(t.type != tokenPunctuator) {
+			return expression;
+		}
+
+		switch(t.punctuator.c) {
+		case puncLSBracket:
+			// ExprAst *index = parseExpression(s);
+
+			getNextToken(&t, s);
+			if(t.type != tokenPunctuator ||
+			   t.punctuator.c != puncRSBracket) {/* error */}
+
+			ExprAst *array = expression;
+			expression = malloc(sizeof(ExprAst));
+			expression->type = exprAstIndex;
+			expression->index.array = array;
+			// primaryExpression->index.index = index;
+
+			// TODO: Type checking and assign a type
+
+			break;
+		case puncLRBracket:
+			// TODO: Function call
+		case puncArrow:;
+		case puncDot:
+			getNextToken(&t, s);
+			if(t.type != tokenIdentifier) {/* error */}
+
+			// TODO: Use symbols to find the offset in the record
+			
+			ExprAst *record = expression;
+			expression = malloc(sizeof(ExprAst));
+			expression->type = exprAstMemberAccess;
+			expression->memberAccess.record = record;
+			expression->memberAccess.offset = 0;
+			expression->memberAccess.isArrow = 
+				t.punctuator.c == puncArrow;
+
+			// TODO: Type checking and assign a type
+
+			break;
+		case puncDPlus:
+		case puncDMinus:;
+			ExprAst *operand = expression;
+			expression = malloc(sizeof(ExprAst));
+			operand->type = exprAstUnary;
+			operand->unary.operand = operand;
+			operand->unary.op =
+				t.punctuator.c == puncDPlus ?
+				exprAstPostfixPlus :
+				exprAstPostfixMinus;
+
+			// TODO: Type checking and assign a type
+
+			break;
+		default: return expression;
+		}
+	}
+}
+
+// A helper function of parseCastExpression that parses unary expressions
+ExprAst *parseUnaryExpression(Stream *s, punctuatorType punc) {
+	ExprAstUnaryOp op;
+	switch(punc) {
+	case puncAmp:
+		op = exprAstRef;
+		break;
+	case puncAsterisk:
+		op = exprAstDeref;
+		break;
+	case puncPlus:
+		op = exprAstUnaryPlus;
+		break;
+	case puncMinus:
+		op = exprAstUnaryMinus;
+		break;
+	case puncTilde:
+		op = exprAstBitwiseNot;
+		break;
+	case puncExcl:
+		op = exprAstLogicalNot;
+		break;
+	case puncDPlus:
+		op = exprAstPrefixPlus;
+		break;
+	case puncDMinus:
+		op = exprAstPrefixMinus;
+		break;
+
+	// Should return back to the previous expression for handling the error
+	default: /* error */;
+	}
+
+	// Parse rest of the expression, which has to be a cast expression
+	// In case of if the cast expression begins with a prefix de/increment,
+	// it will give off a semantic error instead of a syntactic error
+	ExprAst *operand = parseCastExpression(s);
+
+	ExprAst *operation = malloc(sizeof(ExprAst));
+	operation->type = exprAstUnary;
+	operation->unary.operand = operand;
+	operation->unary.op = op;
+
+	// TODO: Type checking and assign a type
+	
+	return operation;
+}
+
+ExprAst *parseCastExpression(Stream *s) {
+	Token t;
+	getNextToken(&t, s);
+
+	switch(t.type) {
+	// Since all binary expressions were or will be parsed out by binary
+	// expression, this case has to be a primary expression with extra
+	// stuff at the end which will get parsed out at the postfix expression
+	case tokenIdentifier:
+		// TODO: sizeof operator
+	case tokenStringLiteral:
+	case tokenIntegerConstant:
+		// TODO: Fill in
+		parsePostfixExpression(s, /* tree with the right token */);
+		break;
+	
+	// This case is either for matching a unary expression or the
+	// expressions beginning in a parenthesis
+	case tokenPunctuator:
+
+		// The case for FIRST = '(' is rather complex and shouldn't be
+		// handled by parseUnaryExpression
+		if(t.punctuator.c == puncLRBracket) {
+			// TODO: Fill in
+		}
+
+		
+		return parseUnaryExpression(s, t.punctuator.c);
+
+		break;
+	default: /* error */;
+	}	
+}
+
 // A helper function for parseBinaryExpression that takes a token and returns
 // the right binary operator precendence
 OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
