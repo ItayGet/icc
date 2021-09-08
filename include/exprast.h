@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "stdbool.h"
+
 // An ordered enum denoting expression's operator precendence
 typedef enum {
 	precComma,
@@ -120,6 +122,7 @@ typedef struct  ExprAst {
 
 		struct {
 			struct ExprAst *record;
+			bool isArrow;
 			
 			// TODO: Temporary solution
 			char offset;
