@@ -100,74 +100,74 @@ typedef struct  ExprAst {
 		// TODO: Finish the structs
 		struct {
 			// Finish struct
-		} Identifier;
+		} identifier;
 
 		struct {
 			// Finish struct
-		} Constant;
+		} constant;
 
 		struct {
 			// Finish struct
-		} StringLiteral;
+		} stringLiteral;
 
 		struct {
 			struct ExprAst *array, *index;
-		} Index;
+		} index;
 
 		struct {
 			// Finish struct
-		} Call;
+		} call;
 
 		struct {
 			struct ExprAst *record;
 			
 			// TODO: Temporary solution
 			char offset;
-		} MemberAccess;
+		} memberAccess;
 
 		struct {
 			struct ExprAst *operand;
 			ExprAstUnaryOp op;
-		} Unary;
+		} unary;
 
 		struct {
 			// Finish struct
-		} CompoundLiteral;
+		} compoundLiteral;
 
 		struct {
 			struct ExprAst *expr;
-		} SizeofUnary;
+		} sizeofUnary;
 
 		struct {
 			// Finish struct
-		} SizeofTypename;
+		} sizeofTypename;
 
 		struct {
 			// Finish struct
-		} Cast;
+		} cast;
 
 		struct {
 			struct ExprAst *lhs, *rhs;
 			ExprAstBinaryOp op;
-		} Binary;
+		} binary;
 
 		struct {
 			struct ExprAst *lhs, *rhs;
 			ExprAstLogicalBinaryOp op;
-		} LogicalBinary;
+		} logicalBinary;
 
 		struct {
 			struct ExprAst *lhs, *rhs;
 			ExprAstAssignmentOp op;
-		} Assignment;
+		} assignment;
 
 		struct {
 			struct ExprAst *cond, *lhs, *rhs;
-		} Conditional;
+		} conditional;
 
 		struct {
 			struct ExprAst *lhs, *rhs;
-		} Comma;
+		} comma;
 	};
 		
 } ExprAst;
