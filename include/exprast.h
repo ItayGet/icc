@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "stdbool.h"
+#include <stdbool.h>
 
 // An ordered enum denoting expression's operator precendence
 typedef enum {
