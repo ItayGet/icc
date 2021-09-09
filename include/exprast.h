@@ -101,7 +101,8 @@ typedef struct  ExprAst {
 	union {
 		// TODO: Finish the structs
 		struct {
-			// Finish struct
+			// TODO: Temporary solution
+			char *name;
 		} identifier;
 
 		struct {
