@@ -129,12 +129,19 @@ ExprAst *parseCastExpression(Stream *s) {
 	// Since all binary expressions were or will be parsed out by binary
 	// expression, this case has to be a primary expression with extra
 	// stuff at the end which will get parsed out at the postfix expression
-	case tokenIdentifier:
-		// TODO: sizeof operator
+	case tokenIdentifier:;
+		ExprAst *primaryExpression = malloc(sizeof(ExprAst));
+		primaryExpression->type = exprAstIdentifier;
+		primaryExpression->identifier.name = t.identifier.name;
+
+		return parsePostfixExpression(s, primaryExpression);
+		break;
 	case tokenStringLiteral:
-	case tokenIntegerConstant:
 		// TODO: Fill in
-		parsePostfixExpression(s, /* tree with the right token */);
+		break;
+	case tokenIntegerConstant:
+
+		//parsePostfixExpression(s, /* tree with the right token */);
 		break;
 	
 	// This case is either for matching a unary expression or the
