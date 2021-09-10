@@ -7,7 +7,7 @@ OBJDIR = ./obj
 CFLAGS = -I$(INCDIR)
 LIBS = -lm
 
-OBJ = lex.o stringbuilder.o literal.o exprparser.o
+OBJ = lex.o stringbuilder.o literal.o exprparser.o icc.o
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
