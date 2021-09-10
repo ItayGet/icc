@@ -5,12 +5,17 @@
 
 // A helper function of parseCastExpression that parses the operations of
 // postfix expression
-ExprAst *parsePostfixExpression(TokenStream *ts, ExprAst *primaryExpression) {
+ExprAst *parsePostfixExpression(TokenStream *ts) {
+
+	Token t;
+	getNextToken(&t, ts);
+
 	// Expression should always hold the newest operation parsed
-	ExprAst *expression = primaryExpression;
+	ExprAst *expression = malloc(sizeof(ExprAst));
+	expression->type = exprAstIdentifier;
+	expression->identifier.name = t.identifier.name;
 
 	while(true) {
-		Token t;
 		getNextToken(&t, ts);
 
 		if(t.type != tokenPunctuator) {
@@ -68,7 +73,9 @@ ExprAst *parsePostfixExpression(TokenStream *ts, ExprAst *primaryExpression) {
 			// TODO: Type checking and assign a type
 
 			break;
-		default: return expression;
+		default: 
+			pushBackToken(ts, &t);
+			return expression;
 		}
 	}
 }
@@ -129,19 +136,11 @@ ExprAst *parseCastExpression(TokenStream *ts) {
 	// Since all binary expressions were or will be parsed out by binary
 	// expression, this case has to be a primary expression with extra
 	// stuff at the end which will get parsed out at the postfix expression
-	case tokenIdentifier:;
-		ExprAst *primaryExpression = malloc(sizeof(ExprAst));
-		primaryExpression->type = exprAstIdentifier;
-		primaryExpression->identifier.name = t.identifier.name;
-
-		return parsePostfixExpression(ts, primaryExpression);
-		break;
+	case tokenIdentifier:
+		// TODO: Check if identifier happens to be sizeof
 	case tokenStringLiteral:
-		// TODO: Fill in
-		break;
 	case tokenIntegerConstant:
-
-		//parsePostfixExpression(s, /* tree with the right token */);
+		parsePostfixExpression(ts);
 		break;
 	
 	// This case is either for matching a unary expression or the
