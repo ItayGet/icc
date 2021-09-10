@@ -13,7 +13,9 @@ void pushLastChar(int c) { progStr[--i] = c; }
 
 int main() {
 	Stream s = { getNextChar, pushLastChar };
+	TokenStream ts;
+	makeTokenStream(&ts);
+	ts.s = s;
 
-	ExprAst *expr = parseBinaryExpression(&s, precBitwiseOr);
+	ExprAst *expr = parseBinaryExpression(&ts, precBitwiseOr);
 }
-

@@ -15,5 +15,15 @@ typedef struct {
 	void (*pushLastChar)(int);
 } Stream;
 
-// Get next token in input stream
-void getNextToken(Token *t, Stream *s);
+typedef struct {
+	Stream s;
+
+	// Is null when type is tokenError
+	Token t;
+} TokenStream;
+
+void makeTokenStream(TokenStream *ts);
+
+void getNextToken(Token *t, TokenStream *ts);
+
+void pushBackToken(TokenStream *ts, Token *t);

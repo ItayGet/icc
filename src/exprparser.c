@@ -5,13 +5,13 @@
 
 // A helper function of parseCastExpression that parses the operations of
 // postfix expression
-ExprAst *parsePostfixExpression(Stream *s, ExprAst *primaryExpression) {
+ExprAst *parsePostfixExpression(TokenStream *ts, ExprAst *primaryExpression) {
 	// Expression should always hold the newest operation parsed
 	ExprAst *expression = primaryExpression;
 
 	while(true) {
 		Token t;
-		getNextToken(&t, s);
+		getNextToken(&t, ts);
 
 		if(t.type != tokenPunctuator) {
 			return expression;
@@ -19,9 +19,9 @@ ExprAst *parsePostfixExpression(Stream *s, ExprAst *primaryExpression) {
 
 		switch(t.punctuator.c) {
 		case puncLSBracket:
-			// ExprAst *index = parseExpression(s);
+			// ExprAst *index = parseExpression(ts);
 
-			getNextToken(&t, s);
+			getNextToken(&t, ts);
 			if(t.type != tokenPunctuator ||
 			   t.punctuator.c != puncRSBracket) {/* error */}
 
@@ -38,7 +38,7 @@ ExprAst *parsePostfixExpression(Stream *s, ExprAst *primaryExpression) {
 			// TODO: Function call
 		case puncArrow:;
 		case puncDot:
-			getNextToken(&t, s);
+			getNextToken(&t, ts);
 			if(t.type != tokenIdentifier) {/* error */}
 
 			// TODO: Use symbols to find the offset in the record
@@ -74,7 +74,7 @@ ExprAst *parsePostfixExpression(Stream *s, ExprAst *primaryExpression) {
 }
 
 // A helper function of parseCastExpression that parses unary expressions
-ExprAst *parseUnaryExpression(Stream *s, punctuatorType punc) {
+ExprAst *parseUnaryExpression(TokenStream *ts, punctuatorType punc) {
 	ExprAstUnaryOp op;
 	switch(punc) {
 	case puncAmp:
@@ -109,7 +109,7 @@ ExprAst *parseUnaryExpression(Stream *s, punctuatorType punc) {
 	// Parse rest of the expression, which has to be a cast expression
 	// In case of if the cast expression begins with a prefix de/increment,
 	// it will give off a semantic error instead of a syntactic error
-	ExprAst *operand = parseCastExpression(s);
+	ExprAst *operand = parseCastExpression(ts);
 
 	ExprAst *operation = malloc(sizeof(ExprAst));
 	operation->type = exprAstUnary;
@@ -121,9 +121,9 @@ ExprAst *parseUnaryExpression(Stream *s, punctuatorType punc) {
 	return operation;
 }
 
-ExprAst *parseCastExpression(Stream *s) {
+ExprAst *parseCastExpression(TokenStream *ts) {
 	Token t;
-	getNextToken(&t, s);
+	getNextToken(&t, ts);
 
 	switch(t.type) {
 	// Since all binary expressions were or will be parsed out by binary
@@ -134,7 +134,7 @@ ExprAst *parseCastExpression(Stream *s) {
 		primaryExpression->type = exprAstIdentifier;
 		primaryExpression->identifier.name = t.identifier.name;
 
-		return parsePostfixExpression(s, primaryExpression);
+		return parsePostfixExpression(ts, primaryExpression);
 		break;
 	case tokenStringLiteral:
 		// TODO: Fill in
@@ -155,7 +155,7 @@ ExprAst *parseCastExpression(Stream *s) {
 		}
 
 		
-		return parseUnaryExpression(s, t.punctuator.c);
+		return parseUnaryExpression(ts, t.punctuator.c);
 
 		break;
 	default: /* error */;
@@ -211,29 +211,29 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 #undef BIN_OP_ERR_VALUE
 }
 
-ExprAst *parseBinaryExpression(Stream *s, OperatorPrec prec) {
+ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 	// Precedence not in range of binary expression
 	if(prec > precBitwiseOr || prec < precCast) { /* error */ }
 
 	// If an operand isn't a binary expression, the appropriate function
 	// should be called
-#define PARSE_OPERAND_EXPRESSION(s, prec)    \
+#define PARSE_OPERAND_EXPRESSION(ts, prec)    \
 	((prec) == precMultiplicative)       \
-	? parseCastExpression((s))           \
-	: parseBinaryExpression((s), (prec)+1) \
+	? parseCastExpression((ts))           \
+	: parseBinaryExpression((ts), (prec)+1) \
 	
-	ExprAst *oper = PARSE_OPERAND_EXPRESSION(s, prec);
+	ExprAst *oper = PARSE_OPERAND_EXPRESSION(ts, prec);
 
 	// Parse multiple operations of the same operator precedence
 	while(true) {
 		Token t;
-		getNextToken(&t, s);
+		getNextToken(&t, ts);
 
 		if(convertTokenToBinaryOperatorPrec(&t) != prec) {
 			return oper;
 		}
 
-		ExprAst *rhs = PARSE_OPERAND_EXPRESSION(s, prec);
+		ExprAst *rhs = PARSE_OPERAND_EXPRESSION(ts, prec);
 
 		// update oper so it will hold the new operation
 		ExprAst *lhs = oper;

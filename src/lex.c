@@ -395,7 +395,8 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 	return true;
 }
 
-void getNextToken(Token *t, Stream *s) {
+// Get next token in input stream without being able to push it back
+void __getNextToken(Token *t, Stream *s) {
 	int c = s->getNextChar();
 
 	skipWhitespace(s, &c);
@@ -412,4 +413,22 @@ void getNextToken(Token *t, Stream *s) {
 	if(isTokenIntegerConstant(t, s, c)) { return; }
 
 	if(isTokenPunctuator(t, s, c)) { return; }
+}
+
+void makeTokenStream(TokenStream *ts) {
+	ts->t.type = tokenError;
+}
+
+void getNextToken(Token *t, TokenStream *ts) {
+	if(ts->t.type != tokenError) {
+		*t = ts->t;
+		ts->t.type = tokenError;
+		return;
+	}
+
+	__getNextToken(t, &ts->s);
+}
+
+void pushBackToken(TokenStream *ts, Token *t) {
+	ts->t = *t;
 }

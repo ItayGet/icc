@@ -7,8 +7,8 @@
 
 
 // Parses all expressions in greater precedence than binary expressions
-ExprAst *parseCastExpression(Stream *s);
+ExprAst *parseCastExpression(TokenStream *ts);
 
 // Parses binary expressions
 // prec is the minimum precedence that will be parsed
-ExprAst *parseBinaryExpression(Stream *s, OperatorPrec prec);
+ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec);
