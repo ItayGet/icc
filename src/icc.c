@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-char progStr[] = "a + b * c + *d";
+char progStr[] = "+a + + -b * *c++";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 
@@ -12,6 +12,7 @@ int getNextChar() { if(i < size(progStr) - 1) { return progStr[i++]; } return EO
 void pushLastChar(int c) { progStr[--i] = c; }
 
 int main() {
+	
 	Stream s = { getNextChar, pushLastChar };
 	TokenStream ts;
 	makeTokenStream(&ts);

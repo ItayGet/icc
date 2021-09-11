@@ -19,6 +19,7 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 		getNextToken(&t, ts);
 
 		if(t.type != tokenPunctuator) {
+			pushBackToken(ts, &t);
 			return expression;
 		}
 
@@ -63,9 +64,9 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 		case puncDMinus:;
 			ExprAst *operand = expression;
 			expression = malloc(sizeof(ExprAst));
-			operand->type = exprAstUnary;
-			operand->unary.operand = operand;
-			operand->unary.op =
+			expression->type = exprAstUnary;
+			expression->unary.operand = operand;
+			expression->unary.op =
 				t.punctuator.c == puncDPlus ?
 				exprAstPostfixPlus :
 				exprAstPostfixMinus;
@@ -140,7 +141,8 @@ ExprAst *parseCastExpression(TokenStream *ts) {
 		// TODO: Check if identifier happens to be sizeof
 	case tokenStringLiteral:
 	case tokenIntegerConstant:
-		parsePostfixExpression(ts);
+		pushBackToken(ts, &t);
+		return parsePostfixExpression(ts);
 		break;
 	
 	// This case is either for matching a unary expression or the
@@ -229,6 +231,7 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 		getNextToken(&t, ts);
 
 		if(convertTokenToBinaryOperatorPrec(&t) != prec) {
+			pushBackToken(ts, &t);
 			return oper;
 		}
 
