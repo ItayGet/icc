@@ -26,7 +26,7 @@ typedef enum {
 typedef enum {
 	exprAstIdentifier, // a
 	exprAstConstant, // 1
-	exprAstStrinLiteral, // "Hello world"
+	exprAstStringLiteral, // "Hello world"
 	exprAstIndex, // a[i]
 	exprAstCall, // func(a, b)
 	exprAstMemberAccess, // a.b
