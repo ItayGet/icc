@@ -198,12 +198,18 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 	case puncAmp:
 		return precBitwiseAnd;
 
-	case puncBar:
-		return precBitwiseOr;
-
 	case puncCaret:
 		return precBitwiseXor;
 		
+	case puncBar:
+		return precBitwiseOr;
+
+	case puncDAmp:
+		return precLogicalAnd;
+	
+	case puncDBar:
+		return precLogicalOr;
+	
 	default:
 		return BIN_OP_ERR_VALUE;
 	}
@@ -214,7 +220,7 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 
 ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 	// Precedence not in range of binary expression
-	if(prec > precBitwiseOr || prec < precCast) { /* error */ }
+	if(prec > precLogicalOr || prec < precCast) { /* error */ }
 
 	// If an operand isn't a binary expression, the appropriate function
 	// should be called
@@ -289,11 +295,17 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 		case puncAmp:
 			op = exprAstBitwiseAnd;
 			break;
+		case puncCaret:
+			op = exprAstBitwiseXor;
+			break;
 		case puncBar:
 			op = exprAstBitwiseOr;
 			break;
-		case puncCaret:
-			op = exprAstBitwiseXor;
+		case puncDAmp:
+			op = exprAstLogicalAnd;
+			break;
+		case puncDBar:
+			op = exprAstLogicalOr;
 			break;
 		default: /* error */;
 		}
