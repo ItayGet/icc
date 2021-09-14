@@ -209,6 +209,19 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 	
 	case puncDBar:
 		return precLogicalOr;
+
+	case puncEqual:
+	case puncEAsterisk:
+	case puncESlash:
+	case puncEPercent:
+	case puncEPlus:
+	case puncEMinus:
+	case puncDELT:
+	case puncDEGT:
+	case puncEAmp:
+	case puncECaret:
+	case puncEBar:
+		return precAssignment;
 	
 	default:
 		return BIN_OP_ERR_VALUE;
@@ -220,7 +233,7 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 
 ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 	// Precedence not in range of binary expression
-	if(prec > precLogicalOr || prec < precCast) { /* error */ }
+	if(prec > precEquality || prec < precCast) { /* error */ }
 
 	// If an operand isn't a binary expression, the appropriate function
 	// should be called
@@ -307,6 +320,40 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 		case puncDBar:
 			op = exprAstLogicalOr;
 			break;
+		case puncEqual:
+			op = exprAstRegAssignment;
+			break;
+		case puncEAsterisk:
+			op = exprAstMultiplyAssignment;
+			break;
+		case puncESlash:
+			op = exprAstDivideAssignment;
+			break;
+		case puncEPercent:
+			op = exprAstModuloAssignment;
+			break;
+		case puncEPlus:
+			op = exprAstAddAssignment;
+			break;
+		case puncEMinus:
+			op = exprAstSubtractAssignment;
+			break;
+		case puncDELT:
+			op = exprAstShiftLeftAssignment;
+			break;
+		case puncDEGT:
+			op = exprAstShiftRightAssignment;
+			break;
+		case puncEAmp:
+			op = exprAstBitwiseAndAssignment;
+			break;
+		case puncECaret:
+			op = exprAstBitwiseXorAssignment;
+			break;
+		case puncEBar:
+			op = exprAstBitwiseOrAssignment;
+			break;
+
 		default: /* error */;
 		}
 
