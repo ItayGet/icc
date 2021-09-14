@@ -235,22 +235,12 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 }
 
 ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
-	// Precedence not in range of binary expression
-	if(
-		prec > precComma || prec < precCast
-		|| prec == precConditional
-	) { /* error */ }
-
 	// If an operand isn't a binary expression, the appropriate function
 	// should be called
-#define PARSE_OPERAND_EXPRESSION(ts, prec)      \
-	((prec)+1 == precCast)                  \
-	? parseCastExpression((ts))             \
-	: ((prec)+1 == precConditional)         \
-	? parseConditionalExpression(ts)        \
-	: parseBinaryExpression((ts), (prec)+1) \
+	if(prec == precCast) { return parseCastExpression(ts); }
+	if(prec == precConditional) { return parseConditionalExpression(ts); }
 	
-	ExprAst *oper = PARSE_OPERAND_EXPRESSION(ts, prec);
+	ExprAst *oper = parseBinaryExpression(ts, prec+1);
 
 	// Parse multiple operations of the same operator precedence
 	while(true) {
@@ -262,7 +252,7 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 			return oper;
 		}
 
-		ExprAst *rhs = PARSE_OPERAND_EXPRESSION(ts, prec);
+		ExprAst *rhs = parseBinaryExpression(ts, prec+1);
 
 		// update oper so it will hold the new operation
 		ExprAst *lhs = oper;
@@ -372,7 +362,6 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 
 		// TODO: Type checking and assign a type
 	}
-#undef PARSE_LOWER_EXPRESSION
 }
 
 ExprAst *parseConditionalExpression(TokenStream *ts) {
