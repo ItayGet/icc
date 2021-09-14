@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-char progStr[] = "a || *b <<= + c";
+char progStr[] = "a ? b || c ? b + c : c + d : *a";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 

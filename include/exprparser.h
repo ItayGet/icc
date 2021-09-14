@@ -12,3 +12,6 @@ ExprAst *parseCastExpression(TokenStream *ts);
 // Parses binary expressions
 // prec is the minimum precedence that will be parsed
 ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec);
+
+// Parses conditional(AKA ternary) expressions
+ExprAst *parseConditionalExpression(TokenStream *ts);

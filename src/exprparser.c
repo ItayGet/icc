@@ -237,9 +237,11 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 
 	// If an operand isn't a binary expression, the appropriate function
 	// should be called
-#define PARSE_OPERAND_EXPRESSION(ts, prec)    \
-	((prec) == precMultiplicative)       \
-	? parseCastExpression((ts))           \
+#define PARSE_OPERAND_EXPRESSION(ts, prec)      \
+	((prec)+1 == precCast)                  \
+	? parseCastExpression((ts))             \
+	: ((prec)+1 == precConditional)         \
+	? parseConditionalExpression(ts)        \
 	: parseBinaryExpression((ts), (prec)+1) \
 	
 	ExprAst *oper = PARSE_OPERAND_EXPRESSION(ts, prec);
@@ -362,4 +364,38 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 		// TODO: Type checking and assign a type
 	}
 #undef PARSE_LOWER_EXPRESSION
+}
+
+ExprAst *parseConditionalExpression(TokenStream *ts) {
+	ExprAst *cond = parseBinaryExpression(ts, precLogicalOr);
+
+	Token t;
+	getNextToken(&t, ts);
+
+	if(t.type != tokenPunctuator || t.punctuator.c != puncQue) {
+		pushBackToken(ts, &t);
+		return cond;
+	}
+	
+	// TODO: Change to parse expression
+	ExprAst *lhs = parseBinaryExpression(ts, precAssignment);
+
+
+	getNextToken(&t, ts);
+
+	if(t.type != tokenPunctuator || t.punctuator.c != puncColon) {
+		/* error */
+	}
+
+	ExprAst *rhs = parseConditionalExpression(ts);
+
+	ExprAst *expression = malloc(sizeof(ExprAst));
+	expression->type = exprAstConditional;
+	expression->conditional.cond = cond;
+	expression->conditional.lhs = lhs;
+	expression->conditional.rhs = rhs;
+
+	// TODO: Type checking
+	
+	return expression;
 }
