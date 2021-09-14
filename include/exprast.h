@@ -8,6 +8,7 @@
 typedef enum {
 	precComma,
 	precAssignment,
+	precConditional,
 	precLogicalOr,
 	precLogicalAnd,
 	precBitwiseOr,
