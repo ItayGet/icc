@@ -19,5 +19,5 @@ int main() {
 	makeTokenStream(&ts);
 	ts.s = s;
 
-	ExprAst *expr = parseBinaryExpression(&ts, precComma);
+	ExprAst *expr = parseExpression(&ts);
 }

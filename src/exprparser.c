@@ -25,7 +25,7 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 
 		switch(t.punctuator.c) {
 		case puncLSBracket:
-			// ExprAst *index = parseExpression(ts);
+			//ExprAst *index = parseExpression(ts);
 
 			getNextToken(&t, ts);
 			if(t.type != tokenPunctuator ||
@@ -386,8 +386,7 @@ ExprAst *parseConditionalExpression(TokenStream *ts) {
 		return cond;
 	}
 	
-	// TODO: Change to parse expression
-	ExprAst *lhs = parseBinaryExpression(ts, precComma);
+	ExprAst *lhs = parseExpression(ts);
 
 
 	getNextToken(&t, ts);
