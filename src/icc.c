@@ -3,7 +3,8 @@
 
 #include <stdio.h>
 
-char progStr[] = "a ? b || c ? b + c : c + d : *a";
+char progStr[] = "a ? b += c - d ? a, e : f : g";
+//char progStr[] = "a";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
 
@@ -18,5 +19,5 @@ int main() {
 	makeTokenStream(&ts);
 	ts.s = s;
 
-	ExprAst *expr = parseBinaryExpression(&ts, precAssignment);
+	ExprAst *expr = parseBinaryExpression(&ts, precComma);
 }

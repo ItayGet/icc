@@ -222,6 +222,9 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 	case puncECaret:
 	case puncEBar:
 		return precAssignment;
+
+	case puncComma:
+		return precComma;
 	
 	default:
 		return BIN_OP_ERR_VALUE;
@@ -233,7 +236,10 @@ OperatorPrec convertTokenToBinaryOperatorPrec(Token *t) {
 
 ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 	// Precedence not in range of binary expression
-	if(prec > precEquality || prec < precCast) { /* error */ }
+	if(
+		prec > precComma || prec < precCast
+		|| prec == precConditional
+	) { /* error */ }
 
 	// If an operand isn't a binary expression, the appropriate function
 	// should be called
@@ -355,6 +361,9 @@ ExprAst *parseBinaryExpression(TokenStream *ts, OperatorPrec prec) {
 		case puncEBar:
 			op = exprAstBitwiseOrAssignment;
 			break;
+		case puncComma:
+			op = exprAstComma;
+			break;
 
 		default: /* error */;
 		}
@@ -378,7 +387,7 @@ ExprAst *parseConditionalExpression(TokenStream *ts) {
 	}
 	
 	// TODO: Change to parse expression
-	ExprAst *lhs = parseBinaryExpression(ts, precAssignment);
+	ExprAst *lhs = parseBinaryExpression(ts, precComma);
 
 
 	getNextToken(&t, ts);

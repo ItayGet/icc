@@ -36,9 +36,8 @@ typedef enum {
 	exprAstSizeofUnary, // sizeof a
 	exprAstSizeofTypename, // sizeof(int)
 	exprAstCast, // (int) a
-	exprAstBinary, // a + b, a * b, a | b, a || b, a = b, a += b
+	exprAstBinary, // a + b, a * b, a | b, a || b, a = b, a += b, a, b
 	exprAstConditional, // a ? b : c
-	exprAstComma, // a, b
 } ExprAstType;
 
 typedef enum {
@@ -84,6 +83,7 @@ typedef enum {
 	exprAstBitwiseAndAssignment, // a &= b
 	exprAstBitwiseXorAssignment, // a ^= b
 	exprAstBitwiseOrAssignment, // a |= b
+	exprAstComma, // a, b
 } ExprAstBinaryOp;
 
 typedef struct  ExprAst {
@@ -151,10 +151,6 @@ typedef struct  ExprAst {
 		struct {
 			struct ExprAst *cond, *lhs, *rhs;
 		} conditional;
-
-		struct {
-			struct ExprAst *lhs, *rhs;
-		} comma;
 	};
 		
 } ExprAst;
