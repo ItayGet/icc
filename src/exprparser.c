@@ -24,8 +24,8 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 		}
 
 		switch(t.punctuator.c) {
-		case puncLSBracket:
-			//ExprAst *index = parseExpression(ts);
+		case puncLSBracket:;
+			ExprAst *index = parseExpression(ts);
 
 			getNextToken(&t, ts);
 			if(t.type != tokenPunctuator ||
@@ -35,7 +35,7 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 			expression = malloc(sizeof(ExprAst));
 			expression->type = exprAstIndex;
 			expression->index.array = array;
-			// primaryExpression->index.index = index;
+			expression->index.index = index;
 
 			// TODO: Type checking and assign a type
 

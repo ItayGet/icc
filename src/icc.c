@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-char progStr[] = "a ? b += c - d ? a, e : f : g";
+char progStr[] = "a ? b += c - d[i] ? a, e : f : g";
 //char progStr[] = "a";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])
