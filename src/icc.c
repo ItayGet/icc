@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-char progStr[] = "a. b, t += sizeof (int)";
+char progStr[] = "(int) a ++ + (a?b:c)";
 //char progStr[] = "a";
 
 #define size(arr) sizeof(arr)/sizeof(arr[0])

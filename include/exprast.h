@@ -141,8 +141,11 @@ typedef struct  ExprAst {
 		} sizeofTypename;
 
 		struct {
+			struct ExprAst *expr;
+
 			// TODO: Temporary solution
 			char *type;
+
 		} cast;
 
 		struct {

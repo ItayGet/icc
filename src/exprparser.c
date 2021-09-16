@@ -81,16 +81,14 @@ ExprAst *parsePrimaryExpression(TokenStream *ts) {
 
 // A helper function of parseCastExpression that parses the operations of
 // postfix expression
-ExprAst *parsePostfixExpression(TokenStream *ts) {
-	ExprAst *expression = parsePrimaryExpression(ts);
-
+ExprAst *parsePostfixExpression(TokenStream *ts, ExprAst *primaryExpression) {
 	while(true) {
 		Token t;
 		getNextToken(&t, ts);
 
 		if(t.type != tokenPunctuator) {
 			pushBackToken(ts, &t);
-			return expression;
+			return primaryExpression;
 		}
 
 		switch(t.punctuator.c) {
@@ -101,11 +99,11 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 			if(t.type != tokenPunctuator ||
 			   t.punctuator.c != puncRSBracket) {/* error */}
 
-			ExprAst *array = expression;
-			expression = malloc(sizeof(ExprAst));
-			expression->type = exprAstIndex;
-			expression->index.array = array;
-			expression->index.index = index;
+			ExprAst *array = primaryExpression;
+			primaryExpression = malloc(sizeof(ExprAst));
+			primaryExpression->type = exprAstIndex;
+			primaryExpression->index.array = array;
+			primaryExpression->index.index = index;
 
 			// TODO: Type checking and assign a type
 
@@ -119,12 +117,12 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 
 			// TODO: Use symbols to find the offset in the record
 			
-			ExprAst *record = expression;
-			expression = malloc(sizeof(ExprAst));
-			expression->type = exprAstMemberAccess;
-			expression->memberAccess.record = record;
-			expression->memberAccess.offset = 0;
-			expression->memberAccess.isArrow = 
+			ExprAst *record = primaryExpression;
+			primaryExpression = malloc(sizeof(ExprAst));
+			primaryExpression->type = exprAstMemberAccess;
+			primaryExpression->memberAccess.record = record;
+			primaryExpression->memberAccess.offset = 0;
+			primaryExpression->memberAccess.isArrow = 
 				t.punctuator.c == puncArrow;
 
 			// TODO: Type checking and assign a type
@@ -132,11 +130,11 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 			break;
 		case puncDPlus:
 		case puncDMinus:;
-			ExprAst *operand = expression;
-			expression = malloc(sizeof(ExprAst));
-			expression->type = exprAstUnary;
-			expression->unary.operand = operand;
-			expression->unary.op =
+			ExprAst *operand = primaryExpression;
+			primaryExpression = malloc(sizeof(ExprAst));
+			primaryExpression->type = exprAstUnary;
+			primaryExpression->unary.operand = operand;
+			primaryExpression->unary.op =
 				t.punctuator.c == puncDPlus ?
 				exprAstPostfixPlus :
 				exprAstPostfixMinus;
@@ -146,7 +144,7 @@ ExprAst *parsePostfixExpression(TokenStream *ts) {
 			break;
 		default: 
 			pushBackToken(ts, &t);
-			return expression;
+			return primaryExpression;
 		}
 	}
 }
@@ -199,6 +197,53 @@ ExprAst *parseUnaryExpression(TokenStream *ts, punctuatorType punc) {
 	return operation;
 }
 
+// A helper function of parseCastExpression that parses the parenthses part of
+// expressions
+ExprAst *parseParenthesesExpression(TokenStream *ts) {
+	Token t;
+	getNextToken(&t, ts);
+
+	// TODO: Because a type system wasn't implemented yet the
+	// indetifier int will be considered a start of a type an the
+	// only type
+	if(t.type != tokenIdentifier || strcmp(t.identifier.name, "int")) {
+		// an expression inside parentheses
+
+		pushBackToken(ts, &t);
+
+		ExprAst *expression = parseExpression(ts);
+		
+		getNextToken(&t, ts);
+		if(t.type != tokenPunctuator ||
+				t.punctuator.c != puncRRBracket) {/* error */}
+
+		return parsePostfixExpression(ts, expression);
+	}
+
+	Token type = t;
+
+	getNextToken(&t, ts);
+	if(t.type != tokenPunctuator ||
+			t.punctuator.c != puncRRBracket) {/* error */}
+
+	getNextToken(&t, ts);
+
+	
+	if( t.type != tokenPunctuator || t.punctuator.c != puncLCBracket) {
+		// Cast expression
+
+		pushBackToken(ts, &t);
+		ExprAst *expression = malloc(sizeof(ExprAst));
+		expression->type = exprAstCast;
+		expression->cast.expr = parseCastExpression(ts);
+		expression->cast.type = type.identifier.name;
+
+		return expression;
+	}
+
+	// TODO: Compount literals
+}
+
 ExprAst *parseCastExpression(TokenStream *ts) {
 	Token t;
 	getNextToken(&t, ts);
@@ -211,7 +256,9 @@ ExprAst *parseCastExpression(TokenStream *ts) {
 	case tokenStringLiteral:
 	case tokenIntegerConstant:
 		pushBackToken(ts, &t);
-		return parsePostfixExpression(ts);
+		ExprAst *primaryExpression = parsePrimaryExpression(ts);
+
+		return parsePostfixExpression(ts, primaryExpression);
 		break;
 	
 	// This case is either for matching a unary expression or the
@@ -221,7 +268,7 @@ ExprAst *parseCastExpression(TokenStream *ts) {
 		// The case for FIRST = '(' is rather complex and shouldn't be
 		// handled by parseUnaryExpression
 		if(t.punctuator.c == puncLRBracket) {
-			// TODO: Fill in
+			return parseParenthesesExpression(ts);
 		}
 
 		
