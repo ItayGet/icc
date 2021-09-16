@@ -137,14 +137,14 @@ typedef struct  ExprAst {
 
 		struct {
 			// TODO: Temporary solution
-			char *type;
+			char *typename;
 		} sizeofTypename;
 
 		struct {
 			struct ExprAst *expr;
 
 			// TODO: Temporary solution
-			char *type;
+			char *typename;
 
 		} cast;
 

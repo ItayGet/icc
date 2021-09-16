@@ -30,7 +30,7 @@ ExprAst *parseRestOfSizeOfExpression(TokenStream *ts) {
 			
 			ExprAst *expression = malloc(sizeof(ExprAst));
 			expression->type = exprAstSizeofTypename;
-			expression->sizeofTypename.type = t.identifier.name;
+			expression->sizeofTypename.typename = t.identifier.name;
 
 			// TODO: Type checking and assign a type
 			
@@ -236,7 +236,7 @@ ExprAst *parseParenthesesExpression(TokenStream *ts) {
 		ExprAst *expression = malloc(sizeof(ExprAst));
 		expression->type = exprAstCast;
 		expression->cast.expr = parseCastExpression(ts);
-		expression->cast.type = type.identifier.name;
+		expression->cast.typename = type.identifier.name;
 
 		return expression;
 	}
