@@ -150,7 +150,7 @@ ExprAst *parsePostfixExpression(TokenStream *ts, ExprAst *primaryExpression) {
 }
 
 // A helper function of parseCastExpression that parses unary expressions
-ExprAst *parseUnaryExpression(TokenStream *ts, punctuatorType punc) {
+ExprAst *parseUnaryExpression(TokenStream *ts, PunctuatorType punc) {
 	ExprAstUnaryOp op;
 	switch(punc) {
 	case puncAmp:

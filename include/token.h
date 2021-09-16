@@ -14,7 +14,7 @@ typedef enum {
 typedef enum {
 	#define TOKEN(NAME) NAME,
 	#include "token.def"
-} punctuatorType;
+} PunctuatorType;
 
 typedef struct {
 	TokenType type;
@@ -24,7 +24,7 @@ typedef struct {
 		} identifier;
 
 		struct {
-			punctuatorType c;
+			PunctuatorType c;
 		} punctuator;
 
 		struct {
