@@ -2,20 +2,90 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
-// A helper function of parseCastExpression that parses the operations of
-// postfix expression
-ExprAst *parsePostfixExpression(TokenStream *ts) {
-
+// A helper function of parsePrimaryExpression that parses the end of a sizeof
+// expression
+ExprAst *parseRestOfSizeOfExpression(TokenStream *ts) {
 	Token t;
 	getNextToken(&t, ts);
 
-	// Expression should always hold the newest operation parsed
+	// HACK: In case the expression starts with parentheses but is a unary
+	// expression this will make guarantee that the right parenthesis will
+	// be consumed
+	bool isParenOpen = false;
+	if(t.type == tokenPunctuator && t.punctuator.c == puncLRBracket) {
+		// TODO: Because a type system wasn't implemented yet the
+		// indetifier int will be considered a start of a type an the
+		// only type
+		getNextToken(&t, ts);
+
+		if(t.type == tokenIdentifier && !strcmp(t.identifier.name, "int")) { 
+			Token paren;
+			getNextToken(&paren, ts);
+
+			if(paren.type != tokenPunctuator || 
+				paren.punctuator.c == puncLRBracket) { /* error */ }
+
+			
+			ExprAst *expression = malloc(sizeof(ExprAst));
+			expression->type = exprAstSizeofTypename;
+			expression->sizeofTypename.type = t.identifier.name;
+
+			// TODO: Type checking and assign a type
+			
+			return expression;
+		}
+
+		pushBackToken(ts, &t);
+		isParenOpen = true;
+	} else { pushBackToken(ts, &t); }
+
+
+	ExprAst *cast = parseCastExpression(ts);
+	ExprAst *expression = malloc(sizeof(ExprAst));
+	expression->type = exprAstSizeofUnary;
+	expression->sizeofUnary.expr = cast;
+
+	if(isParenOpen) {
+		getNextToken(&t, ts);
+		if(t.type != tokenPunctuator || 
+			t.punctuator.c == puncLRBracket) { /* error */ }
+	}
+
+	// TODO: Type checking and assign a type
+	
+	return expression;
+}
+
+// A helper function of parsePostfixExpression that parses a primary expression
+ExprAst *parsePrimaryExpression(TokenStream *ts) {
+	Token t;
+	getNextToken(&t, ts);
+
+	// TODO: Parse constants and string-literals
+
+	// Check if identifier happens to be sizeof
+	if(!strcmp(t.identifier.name, "sizeof")) {
+		return parseRestOfSizeOfExpression(ts);
+	}
+
 	ExprAst *expression = malloc(sizeof(ExprAst));
 	expression->type = exprAstIdentifier;
 	expression->identifier.name = t.identifier.name;
 
+	// TODO: Type checking and assign a type
+
+	return expression;
+}
+
+// A helper function of parseCastExpression that parses the operations of
+// postfix expression
+ExprAst *parsePostfixExpression(TokenStream *ts) {
+	ExprAst *expression = parsePrimaryExpression(ts);
+
 	while(true) {
+		Token t;
 		getNextToken(&t, ts);
 
 		if(t.type != tokenPunctuator) {
@@ -138,7 +208,6 @@ ExprAst *parseCastExpression(TokenStream *ts) {
 	// expression, this case has to be a primary expression with extra
 	// stuff at the end which will get parsed out at the postfix expression
 	case tokenIdentifier:
-		// TODO: Check if identifier happens to be sizeof
 	case tokenStringLiteral:
 	case tokenIntegerConstant:
 		pushBackToken(ts, &t);

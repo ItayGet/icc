@@ -136,11 +136,13 @@ typedef struct  ExprAst {
 		} sizeofUnary;
 
 		struct {
-			// Finish struct
+			// TODO: Temporary solution
+			char *type;
 		} sizeofTypename;
 
 		struct {
-			// Finish struct
+			// TODO: Temporary solution
+			char *type;
 		} cast;
 
 		struct {
