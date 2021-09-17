@@ -12,6 +12,16 @@ The backend will generate x86 assembly.
 - [x] Punctuators
 - [ ] Preprocessor tokens
 ### Parsing
+- [x] Binary expressions
+- [x] Cast expressions
+- [x] Conditional expressions
+- [x] Expressions with parentheses
+- [x] Identifiers
+- [ ] Integer constants
+- [ ] String Literals
+- [ ] Statements
+- [ ] Declarations
+### Semantics
 - [ ] Nothing
 ### Intermediate code generation
 - [ ] Nothing
