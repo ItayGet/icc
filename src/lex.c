@@ -83,7 +83,7 @@ void skipWhitespace(Stream *s, int *c) {
 // If it is return true and change token
 // else, return false
 bool isTokenIdentifier(Token *t, Stream *s, int c) {
-	if(!isalpha(c)) { return false; }
+	if(!isalpha(c) && c != '_') { return false; }
 
 	StringBuilder sb;
 	makeStringBuilder(&sb, CAP_INC_SB);
