@@ -45,3 +45,5 @@ void makeTokenStream(TokenStream *ts);
 void getNextToken(Token *t, TokenStream *ts);
 
 void pushBackToken(TokenStream *ts, Token *t);
+
+void consumePuncToken(TokenStream *ts, PunctuatorType punc);

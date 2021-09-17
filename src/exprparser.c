@@ -21,12 +21,7 @@ ExprAst *parseRestOfSizeOfExpression(TokenStream *ts) {
 		getNextToken(&t, ts);
 
 		if(t.type == tokenIdentifier && !strcmp(t.identifier.name, "int")) { 
-			Token paren;
-			getNextToken(&paren, ts);
-
-			if(paren.type != tokenPunctuator || 
-				paren.punctuator.c == puncLRBracket) { /* error */ }
-
+			consumePuncToken(ts, puncRRBracket);
 			
 			ExprAst *expression = malloc(sizeof(ExprAst));
 			expression->type = exprAstSizeofTypename;
@@ -47,11 +42,7 @@ ExprAst *parseRestOfSizeOfExpression(TokenStream *ts) {
 	expression->type = exprAstSizeofUnary;
 	expression->sizeofUnary.expr = cast;
 
-	if(isParenOpen) {
-		getNextToken(&t, ts);
-		if(t.type != tokenPunctuator || 
-			t.punctuator.c == puncLRBracket) { /* error */ }
-	}
+	if(isParenOpen) { consumePuncToken(ts, puncRRBracket); }
 
 	// TODO: Type checking and assign a type
 	
@@ -213,9 +204,7 @@ ExprAst *parseParenthesesExpression(TokenStream *ts) {
 
 		ExprAst *expression = parseExpression(ts);
 		
-		getNextToken(&t, ts);
-		if(t.type != tokenPunctuator ||
-				t.punctuator.c != puncRRBracket) {/* error */}
+		consumePuncToken(ts, puncRRBracket);
 
 		return parsePostfixExpression(ts, expression);
 	}
@@ -223,13 +212,12 @@ ExprAst *parseParenthesesExpression(TokenStream *ts) {
 	Token type = t;
 
 	getNextToken(&t, ts);
-	if(t.type != tokenPunctuator ||
-			t.punctuator.c != puncRRBracket) {/* error */}
+	consumePuncToken(ts, puncRRBracket);
 
 	getNextToken(&t, ts);
 
 	
-	if( t.type != tokenPunctuator || t.punctuator.c != puncLCBracket) {
+	if(t.type != tokenPunctuator || t.punctuator.c != puncLCBracket) {
 		// Cast expression
 
 		pushBackToken(ts, &t);

@@ -449,3 +449,12 @@ void getNextToken(Token *t, TokenStream *ts) {
 void pushBackToken(TokenStream *ts, Token *t) {
 	ts->t = *t;
 }
+
+void consumePuncToken(TokenStream *ts, PunctuatorType punc) {
+	Token t;
+	getNextToken(&t, ts);
+
+	if(t.type != tokenPunctuator || t.punctuator.c != punc) {
+		// TODO: Handle error
+	}
+}
