@@ -26,7 +26,7 @@ void skipWhitespace(Stream *s, int *c) {
 			case '\t':
 			case '\n':
 				success = true;
-				*c = s->getNextChar();
+				*c = getNextChar(s);
 				continue;
 			case EOF:;
 				 // Pass EOF to parent function(getNextToken)
@@ -37,12 +37,12 @@ void skipWhitespace(Stream *s, int *c) {
 
 		// Skip comments
 		if(*c == '/') {
-			*c = s->getNextChar();
+			*c = getNextChar(s);
 			switch(*c) {
 			// Single-line comment
 			case '/':
 				success = true;
-				while((*c = s->getNextChar()) != '\n') {
+				while((*c = getNextChar(s)) != '\n') {
 					if(*c == EOF) {/* error */}
 				}
 				break;
@@ -50,12 +50,12 @@ void skipWhitespace(Stream *s, int *c) {
 			case '*':
 				success = true;
 				while(true) {
-					*c = s->getNextChar();
+					*c = getNextChar(s);
 					if(*c == EOF) {/* error */}
 					if(*c == '*') {
-						*c = s->getNextChar();
+						*c = getNextChar(s);
 						if(*c != '/') {
-							s->pushLastChar(*c);
+							pushBackChar(s, *c);
 						}
 						break;
 					}
@@ -63,7 +63,7 @@ void skipWhitespace(Stream *s, int *c) {
 				break;
 			default: /* error */;
 			}
-			*c = s->getNextChar();
+			*c = getNextChar(s);
 		}
 	} while(success);
 }
@@ -80,10 +80,10 @@ bool isTokenIdentifier(Token *t, Stream *s, int c) {
 	do {
 		appendStringBuilderChar(&sb, c);
 
-		c = s->getNextChar();
+		c = getNextChar(s);
 	} while(isalnum(c) || c == '_');
 
-	s->pushLastChar(c);
+	pushBackChar(s, c);
 
 	stringifyStringBuilderBuffer(&sb);
 	
@@ -103,13 +103,13 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 
 	// Octal and hex
 	if(c == '0') {
-		c = s->getNextChar();
+		c = getNextChar(s);
 		if(c == 'x' || c == 'X') {
 			// Hex
-			c = s->getNextChar();
+			c = getNextChar(s);
 			//if(!isxdigit(c) { error }
 
-			for(; true; c = s->getNextChar()) {
+			for(; true; c = getNextChar(s)) {
 				if(c >= 'a' && c <= 'f') {
 					value *= 16;
 					value += c - 'a' + 10;
@@ -127,14 +127,14 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 			} 
 		} else {
 			// Octal
-			for(; c >= '0' && c <= '7'; c = s->getNextChar()) {
+			for(; c >= '0' && c <= '7'; c = getNextChar(s)) {
 				value *= 8;
 				value += c - '0';
 			}
 		}
 	} else {
 		// Decimal
-		for(; isdigit(c); c = s->getNextChar()) {
+		for(; isdigit(c); c = getNextChar(s)) {
 			value *= 10;
 			value += c - '0';
 		}
@@ -143,7 +143,7 @@ bool isTokenIntegerConstant(Token *t, Stream *s, int c) {
 	// TODO: add UL suffixes
 	// TODO: reform to add floats
 	
-	s->pushLastChar(c);
+	pushBackChar(s, c);
 
 	t->type = tokenIntegerConstant;
 	t->integer.value = value;
@@ -194,7 +194,7 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 	       t->punctuator.c = puncColon;
 	       break;
 	case '+':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '+':
 			t->punctuator.c = puncDPlus;
@@ -204,12 +204,12 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 			break;
 		default:
 			t->punctuator.c = puncPlus;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '-':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '-':
 			t->punctuator.c = puncDMinus;
@@ -221,60 +221,60 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 			t->punctuator.c = puncArrow;
 		default:
 			t->punctuator.c = puncMinus;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '*':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '=':
 			t->punctuator.c = puncEAsterisk;
 			break;
 		default:
 			t->punctuator.c = puncAsterisk;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '/':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '=':
 			t->punctuator.c = puncESlash;
 			break;
 		default:
 			t->punctuator.c = puncSlash;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '=':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '=':
 			t->punctuator.c = puncDEqual;
 			break;
 		default:
 			t->punctuator.c = puncEqual;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '%':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '=':
 			t->punctuator.c = puncEPercent;
 			break;
 		default:
 			t->punctuator.c = puncPercent;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '&':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '&':
 			t->punctuator.c = puncDAmp;
@@ -284,12 +284,12 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 			break;
 		default:
 			t->punctuator.c = puncAmp;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '|':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '|':
 			t->punctuator.c = puncDBar;
@@ -299,22 +299,22 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 			break;
 		default:
 			t->punctuator.c = puncBar;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '<':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '<':
-			c = s->getNextChar();
+			c = getNextChar(s);
 			switch(c) {
 			case '=':
 				t->punctuator.c = puncDELT;
 				break;
 			default:
 				t->punctuator.c = puncDLT;
-				s->pushLastChar(c);
+				pushBackChar(s, c);
 				break;
 			}
 			break;
@@ -323,22 +323,22 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 			break;
 		default:
 			t->punctuator.c = puncLT;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '>':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '>':
-			c = s->getNextChar();
+			c = getNextChar(s);
 			switch(c) {
 			case '=':
 				t->punctuator.c = puncDEGT;
 				break;
 			default:
 				t->punctuator.c = puncDGT;
-				s->pushLastChar(c);
+				pushBackChar(s, c);
 				break;
 			}
 			break;
@@ -347,31 +347,31 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 			break;
 		default:
 			t->punctuator.c = puncGT;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '!':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '=':
 			t->punctuator.c = puncEExcl;
 			break;
 		default:
 			t->punctuator.c = puncExcl;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
 	case '^':
-		c = s->getNextChar();
+		c = getNextChar(s);
 		switch(c) {
 		case '=':
 			t->punctuator.c = puncECaret;
 			break;
 		default:
 			t->punctuator.c = puncCaret;
-			s->pushLastChar(c);
+			pushBackChar(s, c);
 			break;
 		}
 		break;
@@ -386,7 +386,7 @@ bool isTokenPunctuator(Token *t, Stream *s, int c) {
 
 // Get next token in input stream without being able to push it back
 void __getNextToken(Token *t, Stream *s) {
-	int c = s->getNextChar();
+	int c = getNextChar(s);
 
 	skipWhitespace(s, &c);
 	
@@ -402,6 +402,34 @@ void __getNextToken(Token *t, Stream *s) {
 	if(isTokenIntegerConstant(t, s, c)) { return; }
 
 	if(isTokenPunctuator(t, s, c)) { return; }
+}
+
+int getNextChar(Stream *s) {
+	switch(s->type) {
+	case StreamFile:
+		return getc(s->file.file);
+	case StreamArray:
+		return (!s->array.pointer) 
+			? EOF : *s->array.pointer++;
+	default: /* error */ return EOF;
+	}
+}
+
+void pushBackChar(Stream *s, char c) {
+	switch(s->type) {
+	case StreamFile:
+		ungetc(c, s->file.file);
+		break;
+	case StreamArray:
+		if(s->array.array != s->array.pointer) { s->array.pointer--; }
+	default: /* error */;
+	}
+}
+
+void cleanStream(Stream *s) {
+	if(s->type == StreamFile && s->file.file != stdin) {
+		fclose(s->file.file);
+	}
 }
 
 void makeTokenStream(TokenStream *ts) {

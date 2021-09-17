@@ -4,17 +4,14 @@
 #include <stdio.h>
 
 char progStr[] = "(int) a ++ + (a?b:c)";
-//char progStr[] = "a";
-
-#define size(arr) sizeof(arr)/sizeof(arr[0])
-
-int i = 0;
-int getNextChar() { if(i < size(progStr) - 1) { return progStr[i++]; } return EOF; }
-void pushLastChar(int c) { progStr[--i] = c; }
 
 int main() {
 	
-	Stream s = { getNextChar, pushLastChar };
+	Stream s;
+	s.type = StreamArray;
+	s.array.array = progStr;
+	s.array.pointer = progStr;
+		
 	TokenStream ts;
 	makeTokenStream(&ts);
 	ts.s = s;

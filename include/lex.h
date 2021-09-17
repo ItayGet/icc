@@ -4,12 +4,27 @@
 
 #include "token.h"
 
-typedef struct {
-	// A function which gets the next character from the input stream
-	int (*getNextChar)(); 
+#include <stdio.h>
 
-	// Retrieve last popped character back to input stream
-	void (*pushLastChar)(int);
+typedef enum {
+	StreamError,
+	StreamFile,
+	StreamArray,
+} StreamType;
+
+typedef struct {
+	StreamType type;
+
+	union {
+		struct {
+			FILE *file;
+		} file;
+
+		struct {
+			char *array;
+			char *pointer;
+		} array;
+	};
 } Stream;
 
 typedef struct {
@@ -18,6 +33,12 @@ typedef struct {
 	// Is null when type is tokenError
 	Token t;
 } TokenStream;
+
+int getNextChar(Stream *s);
+
+void pushBackChar(Stream *s, char c);
+
+void cleanStream(Stream *s);
 
 void makeTokenStream(TokenStream *ts);
 
