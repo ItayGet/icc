@@ -9,13 +9,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define MIN_IDEN_SIZE 16 * sizeof(char)
-
-void syntaxError(const char *expected, const char *got, int line) {
-	fprintf(stderr, "Syntax Error: expected %s, but got '%s' at line %d\n", expected, got, line);
-	exit(1);
-}
-
 // Pop all whitespace and comments
 // Parameter c holds currently popped character from the stream
 void skipWhitespace(Stream *s, int *c) {
@@ -50,7 +43,7 @@ void skipWhitespace(Stream *s, int *c) {
 			case '/':
 				success = true;
 				while((*c = s->getNextChar()) != '\n') {
-					if(*c == EOF) { syntaxError("end of line", "EOF", 0); }
+					if(*c == EOF) {/* error */}
 				}
 				break;
 			// Multi-line comment
@@ -58,9 +51,7 @@ void skipWhitespace(Stream *s, int *c) {
 				success = true;
 				while(true) {
 					*c = s->getNextChar();
-					if(*c == EOF) {
-						syntaxError("*/", "EOF", 0);
-					}
+					if(*c == EOF) {/* error */}
 					if(*c == '*') {
 						*c = s->getNextChar();
 						if(*c != '/') {
@@ -70,9 +61,7 @@ void skipWhitespace(Stream *s, int *c) {
 					}
 				}
 				break;
-			default:;
-				char got[] = { *c, 0 };
-				syntaxError("/", got, 0);
+			default: /* error */;
 			}
 			*c = s->getNextChar();
 		}
