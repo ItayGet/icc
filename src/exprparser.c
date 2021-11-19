@@ -211,7 +211,6 @@ ExprAst *parseParenthesesExpression(TokenStream *ts) {
 
 	Token type = t;
 
-	getNextToken(&t, ts);
 	consumePuncToken(ts, puncRRBracket);
 
 	getNextToken(&t, ts);
@@ -258,7 +257,6 @@ ExprAst *parseCastExpression(TokenStream *ts) {
 		if(t.punctuator.c == puncLRBracket) {
 			return parseParenthesesExpression(ts);
 		}
-
 		
 		return parseUnaryExpression(ts, t.punctuator.c);
 
