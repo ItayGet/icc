@@ -1,0 +1,18 @@
+// This file is included by type.def
+
+// Parameters of types:
+// NAME - the name of the type
+// STR - a printf format to be used to print the type
+
+// Integer type
+#ifndef INT_TYPE
+#define INT_TYPE(NAME, STR)
+#endif
+
+INT_TYPE(Char, "char")
+INT_TYPE(SInt, "short int")
+INT_TYPE(Int, "int")
+INT_TYPE(LInt, "long int")
+INT_TYPE(LLInt, "long long int")
+
+#undef INT_TYPE

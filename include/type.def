@@ -1,0 +1,63 @@
+// Parameters of types:
+// NAME - the name of the type
+// STR - a printf format to be used to print the type
+
+// All types
+#ifndef TYPE
+#define TYPE(NAME, STR)
+#endif
+
+// Definitions of types that require other types. For example,
+// Pointers require a pointee
+// A record requires members
+#ifndef STRUCT_TYPE
+#define STRUCT_TYPE(NAME, STR) TYPE(NAME, STR)
+#endif
+
+// Basic types that are built in by the language
+#ifndef BASIC_TYPE
+#define BASIC_TYPE(NAME, STR) TYPE(NAME, STR)
+#endif
+
+// Signed integer types
+#ifndef SIGNED_TYPE
+#define SIGNED_TYPE(NAME, STR) BASIC_TYPE(NAME, STR)
+#endif
+
+// Unsigned integer types
+#ifndef UNSIGNED_TYPE
+#define UNSIGNED_TYPE(NAME, STR) BASIC_TYPE(NAME, STR)
+#endif
+
+// Floating types
+#ifndef FLOAT_TYPE
+#define FLOAT_TYPE(NAME, STR) BASIC_TYPE(NAME, STR)
+#endif
+
+STRUCT_TYPE(Error, "ERROR")
+
+STRUCT_TYPE(Record, "{ %s }")
+STRUCT_TYPE(Pointer, "%s*")
+STRUCT_TYPE(Array, "%s[%d]")
+STRUCT_TYPE(Function, "%s(%s)")
+STRUCT_TYPE(Basic, "%s")
+
+BASIC_TYPE(Error, "ERROR")
+
+// Build all integer types
+BASIC_TYPE(Void, "void")
+#define INT_TYPE(NAME, STR) SIGNED_TYPE(NAME, "signed " STR)
+#include "inttype.def"
+#define INT_TYPE(NAME, STR) UNSIGNED_TYPE(U ## NAME, "unsigned " STR)
+#include "inttype.def"
+
+FLOAT_TYPE(Float, "float")
+FLOAT_TYPE(Double, "double")
+FLOAT_TYPE(LDouble, "long double")
+
+#undef FLOAT_TYPE
+#undef UNSIGNED_TYPE
+#undef SIGNED_TYPE
+#undef BASIC_TYPE
+#undef STRUCT_TYPE
+#undef TYPE
