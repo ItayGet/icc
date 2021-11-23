@@ -17,14 +17,3 @@ BasicType getUsualArithSingedUnsigned(BasicType signedType, BasicType unsignedTy
 
 // Helper function of doUsualArithConversion
 BasicType getUsualArithConversion(BasicType a, BasicType b);
-
-// All binary cast operations clean rhs and might use the buffer to return
-// while lhs stays unchanged and will not be cleaned
-
-// As defined in C99 6.3.1.8
-// lhs->type->type rhs->type->type should be typeBasic
-Type *doUsualArithConversion(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc);
-
-void castAssignmentExpression(ExprRet *rhs, ScopeContext *sc, Type *lhsType);
-
-Type *castAdditiveExpression(ExprRet *lhs, ExprRet *rhs, ScopeContext *sc, bool isSub);
