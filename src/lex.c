@@ -395,8 +395,6 @@ void __getNextToken(Token *t, Stream *s) {
 		return;
 	}
 
-	if(isTokenStringLiteral(t, s, c)) { return; }
-	
 	if(isTokenIdentifier(t, s, c)) { return; }
 
 	if(isTokenIntegerConstant(t, s, c)) { return; }
