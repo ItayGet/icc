@@ -4,6 +4,8 @@
 
 #include <stdbool.h>
 
+#include "type.h"
+
 // An ordered enum denoting expression's operator precendence
 typedef enum {
 	precComma,
@@ -89,7 +91,7 @@ typedef enum {
 typedef struct  ExprAst {
 	ExprAstType type;
 	
-	// TODO: Expression type
+	Type *typename;
 
 	union {
 		// TODO: Finish the structs
@@ -157,5 +159,4 @@ typedef struct  ExprAst {
 			struct ExprAst *cond, *lhs, *rhs;
 		} conditional;
 	};
-		
 } ExprAst;

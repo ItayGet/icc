@@ -117,6 +117,8 @@ for i in progs:
     a = gdb_controller('-a "' + i[0] + '"')
     ast = a.build_ast()
 
+    print(i)
+    pprint(ast)
     # Test failed
     if ast != i[1]:
         print("ERROR: Test failed! for", file=sys.stderr)
