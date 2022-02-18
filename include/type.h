@@ -82,7 +82,7 @@ typedef struct Type {
 	};
 
 	// Refernce counting
-	int references;
+	unsigned int references;
 
 	// TODO: Qualifiers
 } Type; 
